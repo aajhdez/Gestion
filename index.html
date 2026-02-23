@@ -1193,10 +1193,9 @@ let reportIdSeq    = Math.max(...reports.map(r => r.id), 0) + 1;
 //  PERSISTENCIA LOCAL
 // ════════════════════════════════════════════════════════════════
 function loadReports() {
-  try {
-    const saved = localStorage.getItem(LOCAL_KEY);
-    if (saved) { const p = JSON.parse(saved); if (p.length) return p; }
-  } catch(e) {}
+  // Siempre arrancar con los datos demo.
+  // Supabase los reemplazará en cuanto conecte (launchApp lo llama).
+  // Así evitamos que el localStorage viejo bloquee datos nuevos de otros usuarios.
   return [...SEED_REPORTS];
 }
 function saveReports() {
@@ -1207,7 +1206,7 @@ function saveReports() {
 //  SUPABASE — leer y escribir reportes
 // ════════════════════════════════════════════════════════════════
 async function loadReportsFromSupabase() {
-  if (!sb) return;
+  if (!sb) { showSupabaseBadge(false); return; }
   try {
     const { data, error } = await sb
       .from('reportes')
@@ -1216,22 +1215,28 @@ async function loadReportsFromSupabase() {
 
     if (error) throw error;
 
-    if (data && data.length > 0) {
-      // Mapear columnas de Supabase al formato de la app
-      reports = data.map(r => ({
-        id:       r.id,
-        type:     r.type,
-        desc:     r.descripcion,
-        location: r.ubicacion || '',
-        date:     r.fecha || r.created_at?.split('T')[0] || '',
-        status:   r.estado || 'Recibido',
-        folio:    r.folio || `TUL-${String(r.id).padStart(5,'0')}`,
-      }));
-      reportIdSeq = Math.max(...reports.map(r => r.id), 0) + 1;
-      saveReports();
-      renderDashboard();
-      showSupabaseBadge(true);
+    // SIEMPRE reemplazar con datos de Supabase (aunque estén vacíos)
+    // Esto asegura que reportes de otros usuarios aparezcan
+    reports = (data || []).map(r => ({
+      id:       r.id,
+      type:     r.type     || '',
+      desc:     r.descripcion || '',
+      location: r.ubicacion   || '',
+      date:     r.fecha || (r.created_at ? r.created_at.split('T')[0] : ''),
+      status:   r.estado  || 'Recibido',
+      folio:    r.folio   || `TUL-${String(r.id).padStart(5,'0')}`,
+    }));
+
+    // Si Supabase está vacío, mostrar datos demo solo visualmente (no guardar)
+    if (reports.length === 0) {
+      reports = [...SEED_REPORTS];
     }
+
+    reportIdSeq = Math.max(...reports.map(r => r.id), 0) + 1;
+    saveReports();
+    renderDashboard();
+    showSupabaseBadge(true);
+
   } catch(e) {
     console.warn('Carga desde Supabase fallida, usando datos locales:', e);
     showSupabaseBadge(false);
@@ -1239,21 +1244,39 @@ async function loadReportsFromSupabase() {
 }
 
 async function saveReportToSupabase(report) {
-  if (!sb) return false;
+  if (!sb) {
+    console.warn('Supabase no inicializado — verifica URL y ANON KEY');
+    return false;
+  }
   try {
-    const { error } = await sb.from('reportes').insert({
+    const payload = {
       type:        report.type,
       descripcion: report.desc,
-      ubicacion:   report.location,
-      fecha:       report.date,
-      estado:      report.status,
-      folio:       report.folio,
+      ubicacion:   report.location  || '',
+      fecha:       report.date      || new Date().toLocaleDateString('es-MX'),
+      estado:      report.status    || 'Recibido',
+      folio:       report.folio     || '',
       gestor:      'Aarón Jiménez'
-    });
-    if (error) throw error;
+    };
+    const { data, error } = await sb
+      .from('reportes')
+      .insert(payload)
+      .select();          // .select() devuelve la fila insertada para confirmar
+
+    if (error) {
+      // Errores comunes:
+      // 42501 = RLS bloqueó el INSERT → ejecutar las políticas en Supabase SQL Editor
+      // 23502 = columna NOT NULL vacía
+      console.error('Supabase INSERT error:', error.code, error.message, error.details);
+      showToast('⚠️ Error al guardar: ' + (error.message || 'RLS bloqueó el envío'), 'error');
+      return false;
+    }
+
+    console.log('✅ Reporte guardado en Supabase:', data);
     return true;
+
   } catch(e) {
-    console.warn('Error guardando en Supabase:', e);
+    console.error('Error de red al guardar en Supabase:', e);
     return false;
   }
 }
@@ -1333,6 +1356,38 @@ async function sendToFormspree(data) {
 }
 
 // ════════════════════════════════════════════════════════════════
+//  TOAST — notificaciones temporales
+// ════════════════════════════════════════════════════════════════
+function showToast(msg, type = 'info') {
+  const existing = document.getElementById('app-toast');
+  if (existing) existing.remove();
+
+  const colors = {
+    info:    { bg: '#0B2545', text: '#fff' },
+    success: { bg: '#065F46', text: '#fff' },
+    error:   { bg: '#991B1B', text: '#fff' },
+    warn:    { bg: '#92400E', text: '#fff' },
+  };
+  const c = colors[type] || colors.info;
+
+  const toast = document.createElement('div');
+  toast.id = 'app-toast';
+  toast.textContent = msg;
+  Object.assign(toast.style, {
+    position: 'fixed', bottom: '80px', left: '50%',
+    transform: 'translateX(-50%)',
+    background: c.bg, color: c.text,
+    padding: '12px 20px', borderRadius: '12px',
+    fontSize: '13px', fontWeight: '700',
+    boxShadow: '0 4px 20px rgba(0,0,0,.35)',
+    zIndex: '9999', maxWidth: '90vw', textAlign: 'center',
+    animation: 'fadeUp .3s ease both',
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ════════════════════════════════════════════════════════════════
 //  PRIVACIDAD
 // ════════════════════════════════════════════════════════════════
 function checkPrivacy() {
@@ -1369,8 +1424,28 @@ function launchApp() {
   document.getElementById('app').classList.add('visible');
   renderDashboard();
   renderProposals();
-  // Intentar cargar desde Supabase en segundo plano
+  // Cargar datos iniciales desde Supabase
   loadReportsFromSupabase();
+  // Suscribirse a cambios en tiempo real
+  startRealtimeSync();
+}
+
+function startRealtimeSync() {
+  if (!sb) return;
+  sb.channel('reportes-live')
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'reportes' },
+      (payload) => {
+        // Cualquier INSERT, UPDATE o DELETE recarga el dashboard automáticamente
+        console.log('Cambio detectado en Supabase:', payload.eventType);
+        loadReportsFromSupabase();
+      }
+    )
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ Tiempo real activo — el dashboard se actualiza automáticamente');
+      }
+    });
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1384,6 +1459,8 @@ function showView(name, btn) {
   if (btn) btn.classList.add('active');
   const mob = document.getElementById({dashboard:'mob-dashboard',report:'mob-report',proposals:'mob-proposals'}[name]);
   if (mob) mob.classList.add('active');
+  // Refrescar datos de Supabase cada vez que el usuario vuelve al Dashboard
+  if (name === 'dashboard') loadReportsFromSupabase();
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1444,7 +1521,7 @@ function renderReportsList(filter) {
             <div class="report-type">${r.type}</div>
             <div class="report-meta">📍 ${r.location||'—'} · ${r.date} · Folio ${r.folio||'TUL-'+String(r.id).padStart(5,'0')}</div>
           </div>
-          <span class="badge ${bc[r.status]||''}}"><span class="badge-dot"></span>${r.status}</span>
+          <span class="badge ${bc[r.status]||''}"><span class="badge-dot"></span>${r.status}</span>
         </div>
         <div class="report-desc">${r.desc}</div>
       </div>
@@ -1503,9 +1580,13 @@ async function submitReport() {
   // 3️⃣ Enviar a Formspree (email)
   try { await sendToFormspree(newReport); } catch(e) {}
 
-  // 4️⃣ Mostrar resultado
+  // 4️⃣ Recargar desde Supabase y mostrar resultado
+  if (savedToCloud) {
+    await loadReportsFromSupabase(); // trae el reporte con ID real de la BD
+  } else {
+    renderDashboard();
+  }
   showSuccessState(newReport, !savedToCloud);
-  renderDashboard();
 
   submitBtn.textContent = 'ENVIAR REPORTE CIUDADANO'; submitBtn.disabled = false;
 }
@@ -1519,6 +1600,13 @@ function showSuccessState(report, offline = false) {
     ? `Reporte <strong>${report.folio}</strong> guardado localmente. Se sincronizará con la nube al reconectarse.`
     : `Reporte <strong>${report.folio}</strong> guardado en Supabase y enviado al equipo de gestión.`;
   suc.classList.add('show');
+
+  if (!offline) {
+    showToast('✅ Reporte guardado en Supabase', 'success');
+  } else {
+    showToast('⚠️ Guardado localmente — sin conexión a nube', 'warn');
+  }
+
   setTimeout(() => {
     suc.classList.remove('show');
     document.getElementById('report-form-inner').style.display = 'block';
