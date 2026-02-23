@@ -675,6 +675,127 @@ nav.mobile {
   background: var(--bg); border: 1px solid #E2E8F0;
   padding: 4px 10px; border-radius: 99px; margin-left: 8px;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   REPORT HERO — pantalla llamativa para ciudadanos
+══════════════════════════════════════════════════════════════ */
+.report-hero {
+  background: linear-gradient(135deg, #0B2545 0%, #1A3A6B 60%, #2E6DB4 100%);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px 28px;
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.report-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+.report-hero-icon {
+  font-size: 52px;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,.3));
+  animation: bounceIn .6s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes bounceIn {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.report-hero h1 {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.report-hero p {
+  color: #93C5FD;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.report-hero-steps {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hero-step {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Etiquetas de paso numeradas */
+.form-step-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 10px;
+  margin-top: 4px;
+}
+.step-num {
+  width: 28px; height: 28px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900;
+  flex-shrink: 0;
+}
+
+/* Botón de enviar — grande, brillante, imposible de ignorar */
+.btn-submit-hero {
+  width: 100%;
+  padding: 20px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+  color: #fff;
+  border: none;
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .2s;
+  box-shadow: 0 6px 24px rgba(22,163,74,.45);
+  margin-top: 8px;
+  animation: pulseGreen 2.5s ease infinite;
+}
+.btn-submit-hero:hover  { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(22,163,74,.5); }
+.btn-submit-hero:active { transform: scale(.97); }
+
+@keyframes pulseGreen {
+  0%   { box-shadow: 0 6px 24px rgba(22,163,74,.45); }
+  50%  { box-shadow: 0 6px 36px rgba(22,163,74,.75); }
+  100% { box-shadow: 0 6px 24px rgba(22,163,74,.45); }
+}
+
+/* Type buttons — más grandes y vistosos */
+.type-btn {
+  padding: 18px 8px !important;
+}
+.type-btn .emoji {
+  font-size: 28px !important;
+}
 </style>
 </head>
 <body>
@@ -905,23 +1026,33 @@ nav.mobile {
 
     <!-- ── REPORT FORM ── -->
     <div class="view" id="view-report">
-      <div class="section-header">
-        <h1>Nuevo Reporte Ciudadano</h1>
-        <p>Tu reporte es asignado automáticamente al área municipal responsable</p>
+
+      <!-- Hero llamativo para ciudadanos -->
+      <div class="report-hero">
+        <div class="report-hero-icon">📣</div>
+        <h1>¿Ves un problema en tu colonia?</h1>
+        <p>Repórtalo aquí — llega directo al equipo de gestión municipal</p>
+        <div class="report-hero-steps">
+          <div class="hero-step"><span>1️⃣</span> Elige el tipo</div>
+          <div class="hero-step"><span>2️⃣</span> Describe</div>
+          <div class="hero-step"><span>3️⃣</span> Ubica y envía</div>
+        </div>
       </div>
 
       <div class="form-card">
         <!-- Success state -->
         <div class="success-state" id="success-state">
           <div class="success-icon">✅</div>
-          <h3>Reporte Recibido</h3>
-          <p>Tu reporte ha sido registrado con el folio <strong id="success-folio"></strong>. El área municipal correspondiente lo atenderá en breve.</p>
+          <h3>¡Reporte Enviado!</h3>
+          <p>Tu reporte ha sido registrado con el folio <strong id="success-folio"></strong>. El equipo de gestión lo atenderá en breve.</p>
         </div>
 
         <!-- Form -->
         <div id="report-form-inner">
+
+          <!-- Paso 1: Tipo -->
+          <div class="form-step-label"><span class="step-num">1</span> ¿Qué tipo de problema es?</div>
           <div class="form-field">
-            <label class="form-label">Tipo de Reporte</label>
             <div class="type-grid">
               <button class="type-btn" onclick="selectType('Baches', this)" type="button">
                 <span class="emoji">🛣️</span>Baches
@@ -938,15 +1069,17 @@ nav.mobile {
             </div>
           </div>
 
+          <!-- Paso 2: Descripción -->
+          <div class="form-step-label"><span class="step-num">2</span> Describe el problema</div>
           <div class="form-field">
-            <label class="form-label">Descripción</label>
-            <textarea id="f-desc" rows="4" placeholder="Describe el problema con detalle: qué ocurre, cuánto tiempo lleva, impacto en la comunidad..."></textarea>
+            <textarea id="f-desc" rows="4" placeholder="Ejemplo: Hay un bache grande en la calle principal frente al mercado, lleva 2 semanas y ya dañó llantas..."></textarea>
           </div>
 
+          <!-- Paso 3: Ubicación -->
+          <div class="form-step-label"><span class="step-num">3</span> ¿Dónde está el problema?</div>
           <div class="form-field">
-            <label class="form-label">Ubicación</label>
             <div class="location-row">
-              <input type="text" id="f-location" placeholder="Calle, colonia o coordenadas GPS" />
+              <input type="text" id="f-location" placeholder="Calle, colonia o toca GPS →" />
               <button class="btn-gps" onclick="getGPS()" type="button" id="gps-btn">
                 <span>📍</span> GPS
               </button>
@@ -954,7 +1087,7 @@ nav.mobile {
           </div>
 
           <div class="form-field">
-            <label class="form-label">Fotografía (Evidencia)</label>
+            <label class="form-label">Fotografía (opcional pero muy útil)</label>
             <div class="photo-drop" onclick="document.getElementById('f-photo').click()">
               <span class="drop-icon">📷</span>
               <p>Toca para adjuntar foto</p>
@@ -963,7 +1096,7 @@ nav.mobile {
             <img id="photo-preview" alt="preview" />
           </div>
 
-          <button class="btn-submit" onclick="submitReport()">ENVIAR REPORTE CIUDADANO</button>
+          <button class="btn-submit-hero" onclick="submitReport()">📨 ENVIAR MI REPORTE</button>
         </div>
       </div>
     </div>
@@ -1134,13 +1267,11 @@ function handleAdminKeydown(e) {
   if (e.key === 'Escape') closeAdminModal();
 }
 
-// Botón de exportar: pide clave si no está autenticado
+// Botón de exportar: SIEMPRE pide la clave (sin excepción)
 async function requestExport() {
-  if (isAdminAuthenticated()) {
-    await exportToExcel();
-  } else {
-    promptAdminLogin();
-  }
+  // Limpiar sesión anterior para forzar que siempre pida la clave
+  sessionStorage.removeItem(ADMIN_HASH_KEY);
+  promptAdminLogin();
 }
 
 // ════════════════════════════════════════════════════════════════
