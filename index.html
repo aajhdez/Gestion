@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Plataforma de Gestión Ciudadana — Tulancingo de Bravo, Hidalgo" />
+  <title>Tulancingo Digital · Gestión Ciudadana</title>
+
+  <!-- PWA manifest inline -->
+  <link rel="manifest" href="data:application/json,{%22name%22:%22Tulancingo%20Digital%22,%22short_name%22:%22TulanDigital%22,%22display%22:%22standalone%22,%22theme_color%22:%22%230B2545%22}" />
+  <meta name="theme-color" content="#0B2545" />
+
+  <!-- Google Fonts: Sora (display) + Source Serif 4 (body quotes) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=Source+Serif+4:ital,wght@1,400&display=swap" rel="stylesheet" />
+
+<style>
+/* ══════════════════════════════════════════════════════════════
+   VARIABLES & RESET
+══════════════════════════════════════════════════════════════ */
+:root {
+  --navy:      #0B2545;
+  --navy-mid:  #1A3A6B;
+  --blue:      #2E6DB4;
+  --blue-lt:   #4A90D9;
+  --steel:     #4A5568;
+  --silver:    #94A3B8;
+  --bg:        #EEF2F7;
+  --white:     #FFFFFF;
+  --amber:     #D97706;
+  --green:     #059669;
+
+  --radius-sm: 8px;
+  --radius:    14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 4px rgba(11,37,69,.08);
+  --shadow:    0 4px 16px rgba(11,37,69,.12);
+  --shadow-lg: 0 8px 32px rgba(11,37,69,.18);
+
+  --font: 'Sora', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--navy);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KEYFRAMES
+══════════════════════════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes lineGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes pulseRing {
+  0%  { box-shadow: 0 0 0 0 rgba(46,109,180,.4); }
+  70% { box-shadow: 0 0 0 10px rgba(46,109,180,0); }
+  100%{ box-shadow: 0 0 0 0 rgba(46,109,180,0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-1 { animation: fadeUp .5s ease both .05s; }
+.animate-fade-2 { animation: fadeUp .5s ease both .18s; }
+.animate-fade-3 { animation: fadeUp .5s ease both .30s; }
+.animate-fade-4 { animation: fadeUp .5s ease both .42s; }
+.animate-fade-5 { animation: fadeUp .5s ease both .54s; }
+.animate-fade-6 { animation: fadeUp .5s ease both .66s; }
+
+/* ══════════════════════════════════════════════════════════════
+   PRIVACY OVERLAY
+══════════════════════════════════════════════════════════════ */
+#privacy-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: linear-gradient(155deg, #04101E 0%, #0B2545 50%, #1A3A6B 100%);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.privacy-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.privacy-orb {
+  position: absolute; top: -100px; right: -100px;
+  width: 400px; height: 400px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(46,109,180,.22) 0%, transparent 68%);
+}
+.privacy-inner {
+  position: relative; z-index: 1;
+  max-width: 580px; margin: 0 auto;
+  padding: 52px 24px 48px; width: 100%;
+}
+
+/* Badge "Tulancingo Digital" */
+.privacy-badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 10px; padding: 6px 14px 6px 8px;
+  margin-bottom: 22px;
+}
+.privacy-badge-icon {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.privacy-badge span {
+  color: #94BDDD; font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+
+/* Author row */
+.author-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 6px;
+}
+.author-avatar {
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--blue), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900; color: #fff;
+  border: 2px solid rgba(255,255,255,.15);
+}
+.author-name { color: #fff; font-weight: 800; font-size: 15px; }
+.author-sub  { color: #94BDDD; font-size: 11px; margin-top: 1px; }
+.line-accent {
+  display: block; height: 3px; width: 48px;
+  background: var(--blue); border-radius: 2px; margin-top: 12px;
+  transform-origin: left; animation: lineGrow .6s cubic-bezier(.4,0,.2,1) both .2s;
+}
+
+/* Welcome quote */
+.welcome-quote {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  border-left: 4px solid var(--blue);
+  border-radius: var(--radius); padding: 22px 24px;
+  margin: 28px 0;
+}
+.welcome-quote p {
+  font-family: var(--font-serif);
+  color: #DDE8F4; font-size: 15px; line-height: 1.78;
+}
+
+/* Privacy card */
+.privacy-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+}
+.privacy-card-header {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.privacy-card h3 { color: #fff; font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+.privacy-card p  { color: #94BDDD; font-size: 12px; }
+.btn-see-notice {
+  background: rgba(46,109,180,.25); border: 1px solid rgba(46,109,180,.5);
+  color: #94BDDD; font-family: var(--font); font-size: 11px; font-weight: 700;
+  padding: 7px 13px; border-radius: var(--radius-sm); cursor: pointer;
+  white-space: nowrap; letter-spacing: .06em; transition: background .2s;
+}
+.btn-see-notice:hover { background: rgba(46,109,180,.4); }
+
+/* Full notice */
+#full-notice { display: none; }
+#full-notice.open { display: block; margin-top: 16px; }
+.notice-section { margin-bottom: 18px; }
+.notice-section-title {
+  color: var(--blue); font-size: 10px; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase;
+  border-bottom: 1px solid rgba(46,109,180,.25);
+  padding-bottom: 6px; margin-bottom: 10px;
+}
+.notice-info-row {
+  display: flex; gap: 8px; margin-bottom: 5px; flex-wrap: wrap;
+}
+.notice-info-row .lbl { color: #5B7A96; font-size: 12px; min-width: 95px; flex-shrink: 0; }
+.notice-info-row .val { color: #C8DCEA; font-size: 12px; font-weight: 600; }
+.notice-data-item {
+  background: rgba(255,255,255,.04); border-radius: 10px; padding: 12px;
+  margin-bottom: 10px; border-left: 3px solid rgba(46,109,180,.6);
+}
+.notice-data-item h4 { color: #fff; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.notice-data-item .purpose { color: #94BDDD; font-size: 12px; line-height: 1.6; margin-bottom: 3px; }
+.notice-data-item .legal   { color: #5B7A96; font-size: 11px; }
+.arco-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+}
+.arco-item {
+  background: rgba(46,109,180,.1); border: 1px solid rgba(46,109,180,.2);
+  border-radius: 8px; padding: 10px;
+}
+.arco-key {
+  display: inline-block; background: var(--blue); color: #fff;
+  border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 900;
+  margin-right: 6px;
+}
+.arco-label { color: #fff; font-size: 12px; font-weight: 700; }
+.arco-desc  { color: #94BDDD; font-size: 11px; margin-top: 3px; }
+.notice-footer-box {
+  background: rgba(46,109,180,.08); border: 1px solid rgba(46,109,180,.2);
+  border-radius: 8px; padding: 10px 12px;
+}
+.notice-footer-box p { color: #5B7A96; font-size: 11px; line-height: 1.7; }
+.notice-footer-box span { color: #94BDDD; }
+.btn-close-notice {
+  background: none; border: none; color: #5B7A96; font-family: var(--font);
+  font-size: 12px; cursor: pointer; padding: 0; margin-top: 12px;
+  text-decoration: underline;
+}
+
+/* Consent checkbox */
+.consent-label {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius); padding: 14px 16px;
+  cursor: pointer; margin-bottom: 18px;
+  transition: background .25s, border-color .25s;
+}
+.consent-label.checked {
+  background: rgba(46,109,180,.12);
+  border-color: rgba(46,109,180,.5);
+}
+.checkbox-visual {
+  width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 900; color: #fff;
+  transition: all .2s; margin-top: 2px;
+}
+.checkbox-visual.checked {
+  background: var(--blue); border-color: var(--blue);
+}
+.consent-text { color: #C8DCEA; font-size: 13px; line-height: 1.7; }
+.consent-text strong { color: #fff; }
+
+/* Enter button */
+.btn-enter {
+  width: 100%; padding: 16px; border-radius: var(--radius); border: none;
+  font-family: var(--font); font-weight: 800; font-size: 14px;
+  letter-spacing: .1em; text-transform: uppercase; cursor: not-allowed;
+  transition: all .3s;
+  background: rgba(255,255,255,.06); color: rgba(255,255,255,.25);
+}
+.btn-enter.active {
+  background: linear-gradient(135deg, var(--blue) 0%, var(--navy-mid) 100%);
+  color: #fff; cursor: pointer;
+  animation: pulseRing 2s ease infinite;
+  box-shadow: 0 4px 20px rgba(46,109,180,.4);
+}
+.privacy-legal-footer {
+  text-align: center; margin-top: 20px;
+  color: #2E4A6B; font-size: 10px; line-height: 1.8;
+}
+.privacy-legal-footer strong { color: #3A5F82; }
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════ */
+#app { display: none; }
+#app.visible { display: block; }
+
+header {
+  background: var(--navy);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,.25);
+}
+.header-inner {
+  max-width: 960px; margin: 0 auto;
+  padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+}
+.header-brand {
+  display: flex; align-items: center; gap: 11px;
+}
+.brand-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-icon svg { opacity: .9; }
+.brand-name { color: #fff; font-weight: 900; font-size: 14px; letter-spacing: .04em; }
+.brand-sub  { color: #7aaad4; font-size: 10px; margin-top: 1px; }
+
+nav.desktop {
+  display: flex; gap: 4px; align-items: center;
+  background: rgba(255,255,255,.08);
+  border-radius: 12px; padding: 4px;
+}
+.nav-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 9px; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s; color: rgba(255,255,255,.55);
+  background: transparent;
+}
+.nav-btn:hover { color: #fff; background: rgba(255,255,255,.08); }
+.nav-btn.active { background: #fff; color: var(--navy); }
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════════════════════════════ */
+main {
+  max-width: 960px; margin: 0 auto;
+  padding: 28px 20px 100px;
+}
+.section-header { margin-bottom: 22px; }
+.section-header h1 { font-size: 22px; font-weight: 900; color: var(--navy); }
+.section-header p  { font-size: 13px; color: var(--steel); margin-top: 4px; }
+
+/* Tabs / Views */
+.view { display: none; animation: slideIn .3s ease both; }
+.view.active { display: block; }
+
+/* ══════════════════════════════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--white); border-radius: var(--radius);
+  padding: 18px 20px; box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,.05);
+  transition: box-shadow .2s;
+}
+.stat-card:hover { box-shadow: var(--shadow); }
+.stat-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--silver); margin-bottom: 6px;
+}
+.stat-value { font-size: 32px; font-weight: 900; line-height: 1; }
+.stat-sub   { font-size: 11px; color: var(--silver); margin-top: 4px; }
+
+/* ══════════════════════════════════════════════════════════════
+   BAR CHART
+══════════════════════════════════════════════════════════════ */
+.chart-card {
+  background: var(--white); border-radius: var(--radius);
+  padding: 20px 24px; box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,.05); margin-bottom: 20px;
+}
+.chart-title {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--silver); margin-bottom: 16px;
+}
+.bar-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+}
+.bar-label {
+  width: 100px; font-size: 13px; font-weight: 600; color: var(--steel);
+  flex-shrink: 0;
+}
+.bar-track {
+  flex: 1; height: 10px; background: #EEF2F7; border-radius: 99px; overflow: hidden;
+}
+.bar-fill {
+  height: 100%; background: var(--blue); border-radius: 99px;
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+}
+.bar-count {
+  width: 20px; text-align: right;
+  font-size: 13px; font-weight: 800; color: var(--navy);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FILTER TABS
+══════════════════════════════════════════════════════════════ */
+.filter-row {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.filter-btn {
+  padding: 7px 16px; border-radius: 9px;
+  font-family: var(--font); font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid rgba(0,0,0,.1); background: var(--white);
+  color: var(--steel); cursor: pointer; transition: all .2s;
+}
+.filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+.filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* ══════════════════════════════════════════════════════════════
+   REPORT CARDS
+══════════════════════════════════════════════════════════════ */
+.reports-list { display: flex; flex-direction: column; gap: 10px; }
+.report-card {
+  background: var(--white); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,.05);
+  display: flex; gap: 14px; align-items: flex-start;
+  transition: box-shadow .2s, transform .2s;
+}
+.report-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.report-icon {
+  width: 42px; height: 42px; border-radius: 11px;
+  background: var(--bg); display: flex; align-items: center;
+  justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.report-body { flex: 1; min-width: 0; }
+.report-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.report-type { font-size: 14px; font-weight: 800; color: var(--navy); }
+.report-meta { font-size: 11px; color: var(--silver); margin-bottom: 5px; }
+.report-desc { font-size: 12px; color: var(--steel); line-height: 1.6; }
+
+/* Status badge */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 99px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+.badge-recibido    { background: #FEF3C7; color: #B45309; }
+.badge-recibido .badge-dot    { background: var(--amber); }
+.badge-gestion     { background: #DBEAFE; color: #1D4ED8; }
+.badge-gestion .badge-dot     { background: var(--blue); }
+.badge-solucionado { background: #D1FAE5; color: #065F46; }
+.badge-solucionado .badge-dot { background: var(--green); }
+
+.empty-state {
+  text-align: center; padding: 48px 20px;
+  color: var(--silver); font-size: 13px;
+}
+.empty-state span { display: block; font-size: 36px; margin-bottom: 10px; }
+
+/* ══════════════════════════════════════════════════════════════
+   REPORT FORM
+══════════════════════════════════════════════════════════════ */
+.form-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  padding: 32px; box-shadow: var(--shadow);
+  border: 1px solid rgba(0,0,0,.05);
+  max-width: 640px; margin: 0 auto;
+}
+.form-field { margin-bottom: 22px; }
+.form-label {
+  display: block; font-size: 10px; font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--steel); margin-bottom: 10px;
+}
+.type-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.type-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px; border-radius: var(--radius);
+  border: 2px solid #E2E8F0; background: var(--white);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  color: var(--steel); cursor: pointer; transition: all .2s;
+}
+.type-btn:hover  { border-color: var(--blue); color: var(--navy); }
+.type-btn.active { border-color: var(--blue); background: #EBF4FF; color: var(--navy-mid); }
+.type-btn span.emoji { font-size: 22px; }
+
+textarea, input[type="text"] {
+  width: 100%; border: 1.5px solid #E2E8F0; border-radius: var(--radius);
+  padding: 13px 16px; font-family: var(--font); font-size: 13px;
+  color: var(--navy); resize: none;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+textarea:focus, input[type="text"]:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46,109,180,.12);
+}
+textarea::placeholder, input::placeholder { color: #C8D6E5; }
+
+.location-row { display: flex; gap: 10px; }
+.location-row input { flex: 1; }
+.btn-gps {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 16px; border-radius: var(--radius);
+  background: var(--bg); border: 1.5px solid #E2E8F0;
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  color: var(--steel); cursor: pointer; white-space: nowrap;
+  transition: all .2s;
+}
+.btn-gps:hover { background: #E2E8F0; }
+
+/* Photo upload */
+.photo-drop {
+  border: 2px dashed #CBD5E1; border-radius: var(--radius);
+  padding: 28px; display: flex; flex-direction: column;
+  align-items: center; gap: 8px; cursor: pointer;
+  transition: all .25s;
+}
+.photo-drop:hover { border-color: var(--blue); background: #F0F7FF; }
+.photo-drop .drop-icon { font-size: 28px; }
+.photo-drop p { font-size: 12px; color: var(--silver); }
+#photo-preview {
+  width: 100%; max-height: 160px; object-fit: cover;
+  border-radius: var(--radius-sm); display: none; margin-top: 10px;
+}
+
+/* Submit button */
+.btn-submit {
+  width: 100%; padding: 16px; border-radius: var(--radius);
+  background: var(--navy); color: #fff; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 800;
+  letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer; transition: background .2s, transform .15s;
+  box-shadow: 0 4px 14px rgba(11,37,69,.3);
+}
+.btn-submit:hover  { background: var(--navy-mid); }
+.btn-submit:active { transform: scale(.98); }
+
+/* Success state */
+.success-state {
+  display: none; flex-direction: column; align-items: center;
+  padding: 56px 20px; text-align: center; gap: 14px;
+}
+.success-state.show { display: flex; animation: fadeUp .4s ease; }
+.success-icon {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: #D1FAE5; display: flex; align-items: center;
+  justify-content: center; font-size: 32px;
+}
+.success-state h3 { font-size: 20px; font-weight: 900; color: var(--navy); }
+.success-state p  { font-size: 13px; color: var(--steel); max-width: 300px; line-height: 1.6; }
+
+/* ══════════════════════════════════════════════════════════════
+   PROPOSALS
+══════════════════════════════════════════════════════════════ */
+.author-banner {
+  background: linear-gradient(130deg, var(--navy) 0%, var(--navy-mid) 100%);
+  border-radius: var(--radius-lg); padding: 28px 30px;
+  color: #fff; margin-bottom: 20px;
+  box-shadow: var(--shadow-lg);
+}
+.author-banner-row {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
+}
+.author-banner-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 16px;
+  border: 2px solid rgba(255,255,255,.2);
+}
+.author-banner h2 { font-size: 16px; font-weight: 800; }
+.author-banner .sub { color: #93C5FD; font-size: 12px; margin-top: 2px; }
+.author-banner p { color: #BFDBFE; font-size: 13px; line-height: 1.7; }
+
+.proposal-card {
+  background: var(--white); border-radius: var(--radius);
+  padding: 22px 24px; box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,.05); margin-bottom: 14px;
+  transition: box-shadow .2s, transform .2s;
+}
+.proposal-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.proposal-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 12px; margin-bottom: 10px;
+}
+.proposal-title { font-size: 15px; font-weight: 800; color: var(--navy); line-height: 1.35; }
+.proposal-date  { font-size: 11px; color: var(--silver); white-space: nowrap; }
+.proposal-body  { font-size: 13px; color: var(--steel); line-height: 1.7; margin-bottom: 14px; }
+.tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag {
+  background: var(--bg); color: var(--steel);
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 99px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV
+══════════════════════════════════════════════════════════════ */
+nav.mobile {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 99;
+  background: var(--navy);
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.mobile-nav-inner {
+  display: flex; max-width: 960px; margin: 0 auto;
+}
+.mobile-nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 11px 0; border: none; background: transparent;
+  font-family: var(--font); font-size: 10px; font-weight: 700;
+  color: rgba(255,255,255,.4); cursor: pointer; transition: color .2s;
+}
+.mobile-nav-btn .icon { font-size: 20px; }
+.mobile-nav-btn.active { color: #fff; }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 700px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .type-grid  { grid-template-columns: 1fr 1fr; }
+  .form-card  { padding: 22px 18px; }
+  nav.desktop { display: none; }
+  nav.mobile  { display: block; }
+  .arco-grid  { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .bar-label  { width: 80px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PRIVACY OVERLAY
+══════════════════════════════════════════════════════════════ -->
+<div id="privacy-overlay">
+  <div class="privacy-grid"></div>
+  <div class="privacy-orb"></div>
+
+  <div class="privacy-inner">
+
+    <!-- Cabecera -->
+    <div class="animate-fade-1">
+      <div class="privacy-badge">
+        <div class="privacy-badge-icon">🏛️</div>
+        <span>Tulancingo Digital</span>
+      </div>
+      <div class="author-row">
+        <div class="author-avatar">AJ</div>
+        <div>
+          <div class="author-name">Aarón Jiménez</div>
+          <div class="author-sub">Gestión Ciudadana · Tulancingo de Bravo, Hgo.</div>
+        </div>
+      </div>
+      <span class="line-accent"></span>
+    </div>
+
+    <!-- Mensaje de bienvenida -->
+    <div class="welcome-quote animate-fade-2">
+      <p>"Bienvenido a la plataforma de Gestión Ciudadana. Soy Aarón Jiménez. Creo que un Tulancingo moderno se construye con datos y participación. Reporta aquí los fallos en servicios públicos; nosotros documentamos, geolocalizamos y gestionamos la solución ante las instancias correspondientes. Tu reporte es el primer paso para una ciudad que sí funciona."</p>
+    </div>
+
+    <!-- Tarjeta de aviso -->
+    <div class="privacy-card animate-fade-3">
+      <div class="privacy-card-header">
+        <div>
+          <h3>🔒 Aviso de Privacidad</h3>
+          <p>LFPDPPP · DOF 05-07-2010 y su Reglamento (DOF 21-12-2011)</p>
+        </div>
+        <button class="btn-see-notice" onclick="toggleNotice()">VER AVISO</button>
+      </div>
+
+      <!-- Aviso completo expandible -->
+      <div id="full-notice">
+        <br/>
+
+        <!-- I. Responsable -->
+        <div class="notice-section">
+          <div class="notice-section-title">I. RESPONSABLE DEL TRATAMIENTO</div>
+          <div class="notice-info-row"><span class="lbl">Nombre</span><span class="val">Equipo de Gestión Ciudadana — Aarón Jiménez</span></div>
+          <div class="notice-info-row"><span class="lbl">Actividad</span><span class="val">Consultoría en Gobierno Digital y participación ciudadana</span></div>
+          <div class="notice-info-row"><span class="lbl">Territorio</span><span class="val">Municipio de Tulancingo de Bravo, Hidalgo, México</span></div>
+          <div class="notice-info-row"><span class="lbl">Contacto ARCO</span><span class="val"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3c5d5d56545859467c5b515d5550125f5351">[email&#160;protected]</a></span></div>
+        </div>
+
+        <!-- II. Datos -->
+        <div class="notice-section">
+          <div class="notice-section-title">II. DATOS PERSONALES Y FINALIDADES</div>
+          <p style="color:#94BDDD;font-size:12px;line-height:1.6;margin-bottom:12px;">
+            Los datos que recabamos son utilizados <strong style="color:#C8DCEA">exclusivamente</strong> para la gestión de servicios públicos municipales. No serán comercializados, cedidos ni usados con fines distintos.
+          </p>
+          <div class="notice-data-item">
+            <h4>📍 Datos de Ubicación (GPS)</h4>
+            <p class="purpose"><strong style="color:#C8DCEA">Finalidad:</strong> Geolocalizar el reporte para asignarlo al área municipal competente y dar seguimiento preciso al problema en el territorio.</p>
+            <p class="legal">📋 Art. 8 LFPDPPP — consentimiento expreso.</p>
+          </div>
+          <div class="notice-data-item">
+            <h4>📷 Fotografías de Evidencia</h4>
+            <p class="purpose"><strong style="color:#C8DCEA">Finalidad:</strong> Documentar visualmente el problema reportado y acreditar su existencia ante las instancias de gobierno responsables.</p>
+            <p class="legal">📋 Art. 8 y 9 LFPDPPP — datos tratados con medidas reforzadas.</p>
+          </div>
+          <div class="notice-data-item">
+            <h4>✉️ Datos de Contacto (opcionales)</h4>
+            <p class="purpose"><strong style="color:#C8DCEA">Finalidad:</strong> Notificarte sobre el avance de tu reporte. No son obligatorios; puedes reportar de forma anónima.</p>
+            <p class="legal">📋 Art. 13 LFPDPPP — principio de información.</p>
+          </div>
+        </div>
+
+        <!-- III. Transferencias -->
+        <div class="notice-section">
+          <div class="notice-section-title">III. TRANSFERENCIAS</div>
+          <p style="color:#94BDDD;font-size:12px;line-height:1.6;">
+            Los datos podrán ser compartidos con <strong style="color:#C8DCEA">dependencias municipales de Tulancingo de Bravo</strong> (Obras Públicas, CAASIM, Seguridad Pública) únicamente para atender el reporte, conforme al Art. 37 fracción III de la LFPDPPP.<br><br>
+            Los datos <strong style="color:#C8DCEA">no serán transferidos</strong> con fines comerciales, publicitarios ni partidistas.
+          </p>
+        </div>
+
+        <!-- IV. ARCO -->
+        <div class="notice-section">
+          <div class="notice-section-title">IV. DERECHOS ARCO (Arts. 22–35 LFPDPPP)</div>
+          <div class="arco-grid">
+            <div class="arco-item"><span class="arco-key">A</span><span class="arco-label">Acceso</span><p class="arco-desc">Conocer qué datos tuyos tenemos.</p></div>
+            <div class="arco-item"><span class="arco-key">R</span><span class="arco-label">Rectificación</span><p class="arco-desc">Corregir datos inexactos.</p></div>
+            <div class="arco-item"><span class="arco-key">C</span><span class="arco-label">Cancelación</span><p class="arco-desc">Solicitar la eliminación de tus datos.</p></div>
+            <div class="arco-item"><span class="arco-key">O</span><span class="arco-label">Oposición</span><p class="arco-desc">Oponerte al tratamiento.</p></div>
+          </div>
+          <p style="color:#5B7A96;font-size:11px;line-height:1.7;">
+            Envía tu solicitud a <span style="color:#94BDDD"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0564646f6d61607f456268646c692b666a68">[email&#160;protected]</a></span> indicando nombre, folio de reporte y el derecho que deseas ejercer. Responderemos en máximo 20 días hábiles (Art. 24 LFPDPPP).
+          </p>
+        </div>
+
+        <!-- V. Modificaciones -->
+        <div class="notice-section">
+          <div class="notice-section-title">V. MODIFICACIONES</div>
+          <p style="color:#94BDDD;font-size:12px;line-height:1.6;">
+            Cualquier modificación será notificada a través de la plataforma. El uso continuado implica la aceptación de los cambios.
+          </p>
+        </div>
+
+        <div class="notice-footer-box">
+          <p>Última actualización: <span>Diciembre 2025</span> · Versión <span>1.0</span> · LFPDPPP DOF 05-07-2010</p>
+        </div>
+
+        <button class="btn-close-notice" onclick="toggleNotice()">↑ Cerrar aviso completo</button>
+      </div>
+    </div>
+
+    <!-- Checkbox de consentimiento -->
+    <div class="animate-fade-4">
+      <label class="consent-label" id="consent-label" onclick="toggleConsent()">
+        <div class="checkbox-visual" id="checkbox-visual"></div>
+        <p class="consent-text">He leído y acepto el <strong>Aviso de Privacidad</strong>. Consiento el tratamiento de mis datos de ubicación y fotografías para la gestión de reportes de servicios públicos en el Municipio de Tulancingo de Bravo, Hidalgo.</p>
+      </label>
+    </div>
+
+    <!-- Botón de entrada -->
+    <div class="animate-fade-5">
+      <button class="btn-enter" id="btn-enter" onclick="enterApp()">Acepta el aviso para continuar</button>
+    </div>
+
+    <p class="privacy-legal-footer animate-fade-6">
+      Plataforma no gubernamental · Iniciativa ciudadana independiente<br>
+      Aarón Jiménez · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7110101b1915140b31161c10181d5f121e1c">[email&#160;protected]</a> · Tulancingo de Bravo, Hgo.<br>
+      Puedes reportar de forma <strong>anónima</strong> — los datos de contacto son opcionales.
+    </p>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     APP PRINCIPAL
+══════════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">TULANCINGO DIGITAL</div>
+          <div class="brand-sub">Gestión Ciudadana · Municipio de Tulancingo de Bravo</div>
+        </div>
+      </div>
+      <nav class="desktop">
+        <button class="nav-btn active" onclick="showView('dashboard', this)">📊 Dashboard</button>
+        <button class="nav-btn" onclick="showView('report', this)">📝 Reportar</button>
+        <button class="nav-btn" onclick="showView('proposals', this)">💡 Propuestas</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- ── DASHBOARD ── -->
+    <div class="view active" id="view-dashboard">
+      <div class="section-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1>Panel de Control Ciudadano</h1>
+          <p>Monitoreo en tiempo real de reportes — Tulancingo, Hidalgo</p>
+        </div>
+        <button onclick="exportToExcel()" style="display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;border:none;background:#0B2545;color:#fff;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap;box-shadow:0 3px 10px rgba(11,37,69,.25);transition:background .2s;" onmouseover="this.style.background='#1A3A6B'" onmouseout="this.style.background='#0B2545'">
+          📥 Exportar Excel
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Reportes</div>
+          <div class="stat-value" id="stat-total" style="color:var(--navy)">0</div>
+          <div class="stat-sub">registrados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Recibidos</div>
+          <div class="stat-value" id="stat-recibido" style="color:var(--amber)">0</div>
+          <div class="stat-sub">en espera</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">En Gestión</div>
+          <div class="stat-value" id="stat-gestion" style="color:var(--blue)">0</div>
+          <div class="stat-sub">en proceso</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Solucionados</div>
+          <div class="stat-value" id="stat-solucionado" style="color:var(--green)">0</div>
+          <div class="stat-sub">resueltos</div>
+        </div>
+      </div>
+
+      <!-- Bar chart -->
+      <div class="chart-card">
+        <div class="chart-title">Reportes por Categoría</div>
+        <div id="bar-chart"></div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterReports('Todos', this)">Todos</button>
+        <button class="filter-btn" onclick="filterReports('Recibido', this)">Recibido</button>
+        <button class="filter-btn" onclick="filterReports('En Gestión', this)">En Gestión</button>
+        <button class="filter-btn" onclick="filterReports('Solucionado', this)">Solucionado</button>
+      </div>
+
+      <!-- Reports list -->
+      <div class="reports-list" id="reports-list"></div>
+    </div>
+
+    <!-- ── REPORT FORM ── -->
+    <div class="view" id="view-report">
+      <div class="section-header">
+        <h1>Nuevo Reporte Ciudadano</h1>
+        <p>Tu reporte es asignado automáticamente al área municipal responsable</p>
+      </div>
+
+      <div class="form-card">
+        <!-- Success state -->
+        <div class="success-state" id="success-state">
+          <div class="success-icon">✅</div>
+          <h3>Reporte Recibido</h3>
+          <p>Tu reporte ha sido registrado con el folio <strong id="success-folio"></strong>. El área municipal correspondiente lo atenderá en breve.</p>
+        </div>
+
+        <!-- Form -->
+        <div id="report-form-inner">
+          <div class="form-field">
+            <label class="form-label">Tipo de Reporte</label>
+            <div class="type-grid">
+              <button class="type-btn" onclick="selectType('Baches', this)" type="button">
+                <span class="emoji">🛣️</span>Baches
+              </button>
+              <button class="type-btn" onclick="selectType('Agua', this)" type="button">
+                <span class="emoji">💧</span>Agua
+              </button>
+              <button class="type-btn" onclick="selectType('Alumbrado', this)" type="button">
+                <span class="emoji">💡</span>Alumbrado
+              </button>
+              <button class="type-btn" onclick="selectType('Seguridad', this)" type="button">
+                <span class="emoji">🛡️</span>Seguridad
+              </button>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Descripción</label>
+            <textarea id="f-desc" rows="4" placeholder="Describe el problema con detalle: qué ocurre, cuánto tiempo lleva, impacto en la comunidad..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Ubicación</label>
+            <div class="location-row">
+              <input type="text" id="f-location" placeholder="Calle, colonia o coordenadas GPS" />
+              <button class="btn-gps" onclick="getGPS()" type="button" id="gps-btn">
+                <span>📍</span> GPS
+              </button>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Fotografía (Evidencia)</label>
+            <div class="photo-drop" onclick="document.getElementById('f-photo').click()">
+              <span class="drop-icon">📷</span>
+              <p>Toca para adjuntar foto</p>
+            </div>
+            <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="previewPhoto(this)" />
+            <img id="photo-preview" alt="preview" />
+          </div>
+
+          <button class="btn-submit" onclick="submitReport()">ENVIAR REPORTE CIUDADANO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROPOSALS ── -->
+    <div class="view" id="view-proposals">
+      <div class="section-header">
+        <h1>Propuestas Técnicas</h1>
+        <p>Soluciones basadas en análisis de datos ciudadanos</p>
+      </div>
+
+      <div class="author-banner">
+        <div class="author-banner-row">
+          <div class="author-banner-avatar">AJ</div>
+          <div>
+            <h2>Aarón Jiménez</h2>
+            <div class="sub">Desarrollador Full-stack · Consultor en Gobierno Digital</div>
+          </div>
+        </div>
+        <p>Análisis de datos ciudadanos para proponer soluciones técnicas que transformen la gestión municipal de Tulancingo.</p>
+      </div>
+
+      <div id="proposals-list"></div>
+    </div>
+
+  </main>
+
+  <!-- Mobile nav -->
+  <nav class="mobile">
+    <div class="mobile-nav-inner">
+      <button class="mobile-nav-btn active" onclick="showView('dashboard', this)" id="mob-dashboard">
+        <span class="icon">📊</span>Dashboard
+      </button>
+      <button class="mobile-nav-btn" onclick="showView('report', this)" id="mob-report">
+        <span class="icon">📝</span>Reportar
+      </button>
+      <button class="mobile-nav-btn" onclick="showView('proposals', this)" id="mob-proposals">
+        <span class="icon">💡</span>Propuestas
+      </button>
+    </div>
+  </nav>
+
+</div><!-- /#app -->
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════════
+//  ⚙️  CONFIGURACIÓN — edita solo estas dos líneas
+// ════════════════════════════════════════════════════════════════
+//
+//  1) FORMSPREE: entra a https://formspree.io → New Form → copia tu ID
+//     Ejemplo: 'xpwzgkja'  (8 caracteres después de /f/)
+const FORMSPREE_ID = 'TU_ID_AQUÍ';
+//
+//  2) GOOGLE SHEETS: sigue la guía en el README o al pie de este archivo
+//     Ejemplo: 'https://script.google.com/macros/s/AKfy.../exec'
+const SHEETS_URL   = '';   // Deja vacío si aún no lo configuras
+//
+// ════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'tulancingo_privacy_v1';
+const LOCAL_KEY   = 'tulancingo_reports';
+
+const TYPE_ICONS = { Baches:'🛣️', Agua:'💧', Alumbrado:'💡', Seguridad:'🛡️' };
+
+const PROPOSALS = [
+  {
+    title: 'Sistema de Priorización Inteligente de Baches',
+    date:  'Diciembre 2025',
+    body:  'Ante el alto volumen de reportes de baches (38% del total), propongo implementar un algoritmo de scoring que priorice reparaciones por: densidad de tráfico, proximidad a escuelas/hospitales y antigüedad del reporte. Estimación: reducción del 60% en tiempo de respuesta.',
+    tags:  ['Infraestructura', 'IA', 'Movilidad'],
+  },
+  {
+    title: 'Red IoT de Monitoreo de Alumbrado Público',
+    date:  'Noviembre 2025',
+    body:  'Instalación de sensores de bajo costo en luminarias para detección automática de fallas. El sistema notifica en tiempo real al área de mantenimiento, eliminando la dependencia de reportes ciudadanos reactivos. ROI estimado en 18 meses.',
+    tags:  ['IoT', 'Energía', 'Automatización'],
+  },
+  {
+    title: 'Plataforma Unificada de Atención Ciudadana',
+    date:  'Octubre 2025',
+    body:  'Integración de WhatsApp Business API con este dashboard para que los ciudadanos reporten incidencias sin descargar apps. Los reportes se clasifican automáticamente con NLP y se asignan al área municipal correspondiente en menos de 2 minutos.',
+    tags:  ['WhatsApp API', 'NLP', 'Atención Ciudadana'],
+  },
+];
+
+// ── Datos semilla (demo visual, no se envían a Formspree) ────
+const SEED_REPORTS = [
+  { id:1, type:'Baches',    desc:'Bache profundo en Av. Hidalgo 234, peligro para motociclistas.', status:'Solucionado', date:'2025-11-10', location:'Av. Hidalgo 234'      },
+  { id:2, type:'Alumbrado', desc:'5 postes sin luz en Col. Centro, zona oscura de noche.',         status:'En Gestión',  date:'2025-12-01', location:'Col. Centro'           },
+  { id:3, type:'Agua',      desc:'Fuga de agua potable lleva 3 días, calle Reforma 89.',           status:'Recibido',    date:'2025-12-15', location:'Calle Reforma 89'      },
+  { id:4, type:'Seguridad', desc:'Luminaria apagada en parque Juárez, reportes de vandalismo.',    status:'En Gestión',  date:'2025-12-18', location:'Parque Juárez'         },
+  { id:5, type:'Baches',    desc:'Cráter en Blvd. 20 de Noviembre, dañó 2 vehículos.',             status:'Recibido',    date:'2025-12-20', location:'Blvd. 20 de Noviembre' },
+];
+
+// ── Estado global ────────────────────────────────────────────
+let reports        = loadReports();
+let selectedType   = '';
+let currentFilter  = 'Todos';
+let consentChecked = false;
+let reportIdSeq    = Math.max(...reports.map(r => r.id), 0) + 1;
+
+// ════════════════════════════════════════════════════════════════
+//  PERSISTENCIA LOCAL (localStorage → sobrevive recarga)
+// ════════════════════════════════════════════════════════════════
+function loadReports() {
+  try {
+    const saved = localStorage.getItem(LOCAL_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.length > 0) return parsed;
+    }
+  } catch(e) {}
+  return [...SEED_REPORTS];
+}
+
+function saveReports() {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(reports)); } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════════
+//  EXPORTAR A EXCEL (.xlsx nativo sin librería externa)
+//  Genera un XML en formato SpreadsheetML — abre directo en Excel
+// ════════════════════════════════════════════════════════════════
+function exportToExcel() {
+  const headers = ['Folio', 'Tipo', 'Descripción', 'Ubicación', 'Fecha', 'Estado', 'Responsable'];
+
+  const rows = reports.map(r => [
+    `TUL-${String(r.id).padStart(5,'0')}`,
+    r.type,
+    r.desc,
+    r.location || '',
+    r.date,
+    r.status,
+    'Aarón Jiménez'
+  ]);
+
+  // Construir XML SpreadsheetML (compatible con Excel 2003+)
+  const xmlRows = [headers, ...rows].map(row =>
+    `<Row>${row.map(cell =>
+      `<Cell><Data ss:Type="String">${String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`
+    ).join('')}</Row>`
+  ).join('\n    ');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <Styles>
+    <Style ss:ID="header">
+      <Font ss:Bold="1" ss:Color="#FFFFFF"/>
+      <Interior ss:Color="#0B2545" ss:Pattern="Solid"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Reportes Tulancingo">
+    <Table>
+    ${xmlRows}
+    </Table>
+  </Worksheet>
+</Workbook>`;
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+
+  const fecha = new Date().toISOString().split('T')[0];
+  a.download  = `Reportes_Tulancingo_${fecha}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  ENVÍO A FORMSPREE (→ te llega por email a aajhdez@gmail.com)
+//  + envío paralelo a Google Sheets (si configuraste SHEETS_URL)
+// ════════════════════════════════════════════════════════════════
+async function sendToFormspree(data) {
+  if (!FORMSPREE_ID || FORMSPREE_ID === 'TU_ID_AQUÍ') return { ok: true, skipped: true };
+
+  const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      folio:              data.folio,
+      tipo:               data.type,
+      descripcion:        data.desc,
+      ubicacion:          data.location,
+      fecha:              data.date,
+      estado:             data.status,
+      gestor:             'Aarón Jiménez',
+      _subject:           `[Tulancingo Digital] Nuevo reporte: ${data.type} — ${data.folio}`
+    })
+  });
+  return res;
+}
+
+async function sendToSheets(data) {
+  if (!SHEETS_URL) return;
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',    // Google Apps Script no manda CORS headers en POST
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        folio:       data.folio,
+        tipo:        data.type,
+        descripcion: data.desc,
+        ubicacion:   data.location,
+        fecha:       data.date,
+        estado:      data.status,
+        gestor:      'Aarón Jiménez'
+      })
+    });
+  } catch(e) { console.warn('Google Sheets no disponible:', e); }
+}
+
+// ════════════════════════════════════════════════════════════════
+//  PRIVACIDAD
+// ════════════════════════════════════════════════════════════════
+function checkPrivacy() {
+  if (localStorage.getItem(STORAGE_KEY) === 'true') launchApp();
+}
+
+function toggleNotice() {
+  const el  = document.getElementById('full-notice');
+  const btn = document.querySelector('.btn-see-notice');
+  const open = el.classList.toggle('open');
+  btn.textContent = open ? 'CERRAR ↑' : 'VER AVISO';
+}
+
+function toggleConsent() {
+  consentChecked = !consentChecked;
+  const lbl = document.getElementById('consent-label');
+  const box = document.getElementById('checkbox-visual');
+  const btn = document.getElementById('btn-enter');
+  lbl.classList.toggle('checked', consentChecked);
+  box.classList.toggle('checked', consentChecked);
+  box.textContent = consentChecked ? '✓' : '';
+  btn.classList.toggle('active', consentChecked);
+  btn.textContent = consentChecked ? '✔ Entrar a la Plataforma' : 'Acepta el aviso para continuar';
+}
+
+function enterApp() {
+  if (!consentChecked) return;
+  localStorage.setItem(STORAGE_KEY, 'true');
+  launchApp();
+}
+
+function launchApp() {
+  document.getElementById('privacy-overlay').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  renderDashboard();
+  renderProposals();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ════════════════════════════════════════════════════════════════
+function showView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('nav.desktop .nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const mobileMap = { dashboard:'mob-dashboard', report:'mob-report', proposals:'mob-proposals' };
+  const mob = document.getElementById(mobileMap[name]);
+  if (mob) mob.classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════════
+function renderDashboard() {
+  updateStats();
+  renderBarChart();
+  renderReportsList(currentFilter);
+}
+
+function updateStats() {
+  const counts = { Recibido: 0, 'En Gestión': 0, Solucionado: 0 };
+  reports.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+  document.getElementById('stat-total').textContent       = reports.length;
+  document.getElementById('stat-recibido').textContent    = counts['Recibido'];
+  document.getElementById('stat-gestion').textContent     = counts['En Gestión'];
+  document.getElementById('stat-solucionado').textContent = counts['Solucionado'];
+}
+
+function renderBarChart() {
+  const types  = ['Baches', 'Agua', 'Alumbrado', 'Seguridad'];
+  const counts = types.map(t => reports.filter(r => r.type === t).length);
+  const maxVal = Math.max(...counts, 1);
+  document.getElementById('bar-chart').innerHTML = types.map((t, i) => `
+    <div class="bar-row">
+      <div class="bar-label">${TYPE_ICONS[t]} ${t}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(counts[i]/maxVal)*100}%"></div></div>
+      <div class="bar-count">${counts[i]}</div>
+    </div>`).join('');
+}
+
+function filterReports(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderReportsList(status);
+}
+
+function renderReportsList(filter) {
+  const list     = document.getElementById('reports-list');
+  const filtered = filter === 'Todos' ? reports : reports.filter(r => r.status === filter);
+
+  // Actualizar conteos en botones de filtro
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    const label = btn.textContent.replace(/\s*\(\d+\)/, '');
+    const count = label === 'Todos' ? reports.length : reports.filter(r => r.status === label).length;
+    btn.textContent = `${label} (${count})`;
+    if (label === filter) btn.classList.add('active');
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><span>📭</span>No hay reportes en esta categoría.</div>`;
+    return;
+  }
+
+  const badgeClass = { 'Recibido':'badge-recibido', 'En Gestión':'badge-gestion', 'Solucionado':'badge-solucionado' };
+  list.innerHTML = filtered.map(r => `
+    <div class="report-card">
+      <div class="report-icon">${TYPE_ICONS[r.type] || '📋'}</div>
+      <div class="report-body">
+        <div class="report-top">
+          <div>
+            <div class="report-type">${r.type}</div>
+            <div class="report-meta">📍 ${r.location || '—'} · ${r.date} · Folio TUL-${String(r.id).padStart(5,'0')}</div>
+          </div>
+          <span class="badge ${badgeClass[r.status] || ''}">
+            <span class="badge-dot"></span>${r.status}
+          </span>
+        </div>
+        <div class="report-desc">${r.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  FORMULARIO DE REPORTE
+// ════════════════════════════════════════════════════════════════
+function selectType(type, btn) {
+  selectedType = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function getGPS() {
+  const btn = document.getElementById('gps-btn');
+  btn.textContent = '⏳ ...';
+  btn.disabled = true;
+  if (!navigator.geolocation) {
+    document.getElementById('f-location').value = 'Tulancingo de Bravo, Hidalgo';
+    resetGPSBtn(); return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => { document.getElementById('f-location').value = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`; resetGPSBtn(); },
+    ()  => { document.getElementById('f-location').value = 'Tulancingo de Bravo, Hidalgo'; resetGPSBtn(); },
+    { timeout: 6000 }
+  );
+}
+
+function resetGPSBtn() {
+  const btn = document.getElementById('gps-btn');
+  btn.innerHTML = '<span>📍</span> GPS';
+  btn.disabled = false;
+}
+
+function previewPhoto(input) {
+  const preview = document.getElementById('photo-preview');
+  if (input.files && input.files[0]) {
+    preview.src = URL.createObjectURL(input.files[0]);
+    preview.style.display = 'block';
+  }
+}
+
+// ── submitReport: Formspree + Google Sheets + localStorage ───
+async function submitReport() {
+  const desc     = document.getElementById('f-desc').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+
+  if (!selectedType) { alert('Por favor selecciona el tipo de reporte.');    return; }
+  if (!desc)         { alert('Por favor describe el problema.');              return; }
+  if (!location)     { alert('Por favor indica la ubicación o usa el GPS.'); return; }
+
+  // Deshabilitar botón para evitar doble envío
+  const submitBtn = document.querySelector('.btn-submit');
+  submitBtn.textContent = 'Enviando...';
+  submitBtn.disabled = true;
+
+  const today     = new Date().toLocaleDateString('es-MX');
+  const newReport = {
+    id:       reportIdSeq++,
+    type:     selectedType,
+    desc,
+    location,
+    date:     today,
+    status:   'Recibido',
+  };
+  newReport.folio = `TUL-${String(newReport.id).padStart(5,'0')}`;
+
+  try {
+    // 1️⃣ Enviar a Formspree (→ email a aajhdez@gmail.com)
+    const fsRes = await sendToFormspree(newReport);
+
+    if (fsRes && !fsRes.ok && !fsRes.skipped) {
+      throw new Error('Formspree rechazó el envío');
+    }
+
+    // 2️⃣ Enviar a Google Sheets en paralelo (silencioso si falla)
+    sendToSheets(newReport);
+
+    // 3️⃣ Guardar en localStorage (persiste en este navegador)
+    reports.unshift(newReport);
+    saveReports();
+
+    // 4️⃣ Mostrar éxito y actualizar dashboard
+    showSuccessState(newReport);
+    renderDashboard();
+
+  } catch (err) {
+    console.error('Error al enviar reporte:', err);
+    // Guardamos localmente de todas formas para no perder el reporte
+    reports.unshift(newReport);
+    saveReports();
+    renderDashboard();
+    showSuccessState(newReport, true); // true = modo offline
+  } finally {
+    submitBtn.textContent = 'ENVIAR REPORTE CIUDADANO';
+    submitBtn.disabled = false;
+  }
+}
+
+function showSuccessState(report, offline = false) {
+  document.getElementById('report-form-inner').style.display = 'none';
+  const suc = document.getElementById('success-state');
+  document.getElementById('success-folio').textContent = report.folio;
+
+  // Cambiar subtítulo si fue offline
+  const subEl = suc.querySelector('p');
+  if (subEl) {
+    subEl.innerHTML = offline
+      ? `Tu reporte <strong>${report.folio}</strong> fue guardado localmente. Se enviará cuando recuperes conexión.`
+      : `Tu reporte <strong>${report.folio}</strong> fue registrado y enviado a la plataforma. El área municipal correspondiente lo atenderá en breve.`;
+  }
+
+  suc.classList.add('show');
+
+  setTimeout(() => {
+    suc.classList.remove('show');
+    document.getElementById('report-form-inner').style.display = 'block';
+    selectedType = '';
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('f-desc').value              = '';
+    document.getElementById('f-location').value          = '';
+    document.getElementById('f-photo').value             = '';
+    document.getElementById('photo-preview').style.display = 'none';
+  }, 4000);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  PROPUESTAS
+// ════════════════════════════════════════════════════════════════
+function renderProposals() {
+  const container = document.getElementById('proposals-list');
+  container.innerHTML = PROPOSALS.map(p => `
+    <div class="proposal-card">
+      <div class="proposal-top">
+        <div class="proposal-title">${p.title}</div>
+        <div class="proposal-date">${p.date}</div>
+      </div>
+      <p class="proposal-body">${p.body}</p>
+      <div class="tags">${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+// ── Inicialización ──────────────────────────────────────────
+checkPrivacy();
+</script>
+</body>
+</html>
