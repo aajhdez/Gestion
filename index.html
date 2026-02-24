@@ -842,6 +842,73 @@ nav.mobile {
 .mobile-nav-btn.active .icon {
   filter: drop-shadow(0 0 4px rgba(96,165,250,.6));
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN PANEL INTERNO
+══════════════════════════════════════════════════════════════ */
+.ap-tab {
+  background: none; border: none; border-bottom: 3px solid transparent;
+  color: #6B8AAA; font-family: var(--font); font-size: 13px; font-weight: 700;
+  padding: 14px 16px; cursor: pointer; transition: all .2s; white-space: nowrap;
+}
+.ap-tab:hover { color: #E2ECF6; }
+.ap-tab.active { color: #93C5FD; border-bottom-color: #2E6DB4; }
+
+.ap-view { display: none; }
+.ap-view.active { display: block; animation: fadeUp .3s ease; }
+
+.ap-card {
+  background: #1C2F47; border: 1px solid rgba(255,255,255,.07);
+  border-radius: 16px; padding: 20px 22px; margin-bottom: 16px;
+}
+
+.ap-th {
+  text-align: left; font-size: 9px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: #6B8AAA; padding: 0 14px 12px;
+}
+#ap-table td {
+  padding: 13px 14px; border-bottom: 1px solid rgba(255,255,255,.04);
+  font-size: 13px; color: #E2ECF6; vertical-align: middle;
+}
+#ap-table tr:last-child td { border-bottom: none; }
+#ap-table tr:hover td { background: rgba(255,255,255,.03); }
+
+.ap-status-sel {
+  background: #152236; border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px; padding: 6px 10px; color: #E2ECF6;
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  cursor: pointer; outline: none;
+}
+
+.ap-btn {
+  padding: 6px 11px; border-radius: 8px; border: none;
+  font-family: var(--font); font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+}
+.ap-btn-msg { background: rgba(46,109,180,.25); color: #93C5FD; }
+.ap-btn-msg:hover { background: rgba(46,109,180,.5); }
+.ap-btn-del { background: rgba(125,26,46,.25); color: #FCA5A5; }
+.ap-btn-del:hover { background: rgba(125,26,46,.5); }
+
+.ap-filter {
+  padding: 7px 14px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1);
+  background: #1C2F47; color: #6B8AAA; font-family: var(--font);
+  font-size: 11px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.ap-filter:hover { color: #93C5FD; border-color: #2E6DB4; }
+.ap-filter.active { background: #2E6DB4; border-color: #2E6DB4; color: #fff; }
+
+.ap-ch-btn {
+  flex: 1; padding: 9px; border-radius: 9px; border: 1.5px solid rgba(255,255,255,.1);
+  background: #1C2F47; color: #6B8AAA; font-family: var(--font);
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.ap-ch-btn.active { border-color: #2E6DB4; color: #93C5FD; background: rgba(46,109,180,.2); }
+
+@media (max-width: 600px) {
+  #ap-stats-grid { grid-template-columns: 1fr 1fr !important; }
+  #ap-table th:nth-child(n+4), #ap-table td:nth-child(n+4) { display: none; }
+}
 </style>
 </head>
 <body>
@@ -1199,12 +1266,12 @@ nav.mobile {
   </nav>
 
 
-<!-- ══ MODAL: Clave de Administrador ══ -->
+<!-- ══ ADMIN PASSWORD GATE ══ -->
 <div id="admin-modal" onclick="if(event.target===this)closeAdminModal()">
   <div class="admin-box">
     <div class="lock-icon">🔐</div>
     <h3>Acceso Administrativo</h3>
-    <p>Esta función es exclusiva del equipo de gestión.<br>Ingresa la clave secreta para continuar.</p>
+    <p>Panel exclusivo de Aarón Jiménez.<br>Ingresa tu clave para continuar.</p>
     <input
       type="password"
       id="admin-pass-input"
@@ -1216,7 +1283,168 @@ nav.mobile {
     <div class="admin-error" id="admin-error"></div>
     <div class="admin-btn-row">
       <button class="btn-admin-cancel" onclick="closeAdminModal()">Cancelar</button>
-      <button class="btn-admin-confirm" onclick="verifyAdminPassword()">Verificar →</button>
+      <button class="btn-admin-confirm" onclick="verifyAdminPassword()">Entrar al Panel →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN PANEL (pantalla completa) ══ -->
+<div id="admin-panel" style="display:none;position:fixed;inset:0;z-index:3000;background:#0D1B2E;overflow-y:auto;font-family:var(--font);">
+
+  <!-- Admin Header -->
+  <div style="background:#152236;border-bottom:1px solid rgba(255,255,255,.08);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:20px;">🏛️</span>
+      <div>
+        <div style="font-size:13px;font-weight:900;color:#fff;">PANEL MAESTRO · AARÓN JIMÉNEZ</div>
+        <div style="font-size:10px;color:#6B8AAA;">Tulancingo Digital · Gestión Municipal</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="ap-sb-badge" style="font-size:11px;font-weight:700;color:#6B8AAA;background:#1C2F47;padding:5px 12px;border-radius:99px;">⏳ Conectando...</span>
+      <button onclick="ap_exportExcel()" style="background:#16A34A;color:#fff;border:none;border-radius:9px;padding:8px 14px;font-family:var(--font);font-size:12px;font-weight:800;cursor:pointer;">📥 Excel</button>
+      <button onclick="closeAdminPanel()" style="background:#1C2F47;color:#6B8AAA;border:none;border-radius:9px;padding:8px 14px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;">✕ Salir</button>
+    </div>
+  </div>
+
+  <!-- Admin Nav tabs -->
+  <div style="background:#152236;padding:0 20px;display:flex;gap:4px;border-bottom:1px solid rgba(255,255,255,.06);overflow-x:auto;">
+    <button class="ap-tab active" onclick="apShowTab('ap-stats',this)">📊 Estadísticas</button>
+    <button class="ap-tab" onclick="apShowTab('ap-reportes',this)">📋 Reportes <span id="ap-nav-badge" style="background:#7D1A2E;color:#fff;font-size:10px;padding:1px 6px;border-radius:99px;margin-left:4px;">0</span></button>
+    <button class="ap-tab" onclick="apShowTab('ap-propuestas',this)">💡 Propuestas</button>
+    <button class="ap-tab" onclick="apShowTab('ap-mensajes',this)">✉️ Mensajes</button>
+  </div>
+
+  <div style="padding:20px;max-width:1100px;margin:0 auto;">
+
+    <!-- ── TAB: ESTADÍSTICAS ── -->
+    <div class="ap-view active" id="ap-stats">
+      <!-- Stat cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;" id="ap-stats-grid">
+        <div class="ap-card" style="text-align:center;">
+          <div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6B8AAA;margin-bottom:6px;">TOTAL</div>
+          <div id="ap-s-total" style="font-size:34px;font-weight:900;color:#93C5FD;">—</div>
+        </div>
+        <div class="ap-card" style="text-align:center;">
+          <div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6B8AAA;margin-bottom:6px;">RECIBIDOS</div>
+          <div id="ap-s-recibido" style="font-size:34px;font-weight:900;color:#FCD34D;">—</div>
+        </div>
+        <div class="ap-card" style="text-align:center;">
+          <div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6B8AAA;margin-bottom:6px;">EN GESTIÓN</div>
+          <div id="ap-s-gestion" style="font-size:34px;font-weight:900;color:#93C5FD;">—</div>
+        </div>
+        <div class="ap-card" style="text-align:center;">
+          <div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6B8AAA;margin-bottom:6px;">SOLUCIONADOS</div>
+          <div id="ap-s-solucionado" style="font-size:34px;font-weight:900;color:#86EFAC;">—</div>
+        </div>
+      </div>
+      <!-- Charts -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+        <div class="ap-card">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6B8AAA;margin-bottom:14px;">POR CATEGORÍA</div>
+          <canvas id="ap-chart-tipo" height="180"></canvas>
+        </div>
+        <div class="ap-card">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6B8AAA;margin-bottom:14px;">POR ESTATUS</div>
+          <canvas id="ap-chart-status" height="180"></canvas>
+        </div>
+      </div>
+      <!-- Recent -->
+      <div class="ap-card">
+        <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6B8AAA;margin-bottom:14px;">ÚLTIMOS 10 REPORTES</div>
+        <div id="ap-recent-list"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: REPORTES ── -->
+    <div class="ap-view" id="ap-reportes">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+        <input id="ap-search" placeholder="🔍 Buscar folio, nombre, descripción..." oninput="apFilterTable()"
+          style="flex:1;min-width:200px;background:#1C2F47;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:#fff;font-family:var(--font);font-size:13px;outline:none;" />
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="ap-filter active" onclick="apSetFilter('Todos',this)">Todos</button>
+          <button class="ap-filter" onclick="apSetFilter('Recibido',this)">Recibido</button>
+          <button class="ap-filter" onclick="apSetFilter('En Gestión',this)">En Gestión</button>
+          <button class="ap-filter" onclick="apSetFilter('Solucionado',this)">Solucionado</button>
+        </div>
+      </div>
+      <div class="ap-card" style="padding:0;overflow:hidden;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;" id="ap-table">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,.07);">
+                <th class="ap-th">Folio</th>
+                <th class="ap-th">Tipo</th>
+                <th class="ap-th">Descripción</th>
+                <th class="ap-th">Ubicación</th>
+                <th class="ap-th">Ciudadano</th>
+                <th class="ap-th">Fecha</th>
+                <th class="ap-th">Estatus</th>
+                <th class="ap-th">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="ap-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:#6B8AAA;">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: PROPUESTAS ── -->
+    <div class="ap-view" id="ap-propuestas">
+      <div class="ap-card" style="margin-bottom:20px;">
+        <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:16px;">➕ Nueva Propuesta</div>
+        <input id="ap-prop-title" placeholder="Título de la propuesta..."
+          style="width:100%;background:#0D1B2E;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 14px;color:#fff;font-family:var(--font);font-size:13px;outline:none;margin-bottom:12px;" />
+        <textarea id="ap-prop-body" rows="4" placeholder="Descripción detallada..."
+          style="width:100%;background:#0D1B2E;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 14px;color:#fff;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:12px;"></textarea>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="ap-tag-in" placeholder="Etiqueta + Enter"
+            style="flex:1;background:#0D1B2E;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 14px;color:#fff;font-family:var(--font);font-size:12px;outline:none;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();apAddTag()}" />
+          <button onclick="apAddTag()" style="background:#2E6DB4;color:#fff;border:none;border-radius:9px;padding:9px 14px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;">+ Tag</button>
+        </div>
+        <div id="ap-tags-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+        <button onclick="apSaveProposal()" style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:12px 22px;font-family:var(--font);font-size:13px;font-weight:800;cursor:pointer;">💾 Guardar Propuesta</button>
+      </div>
+      <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6B8AAA;margin-bottom:12px;">PROPUESTAS PUBLICADAS</div>
+      <div id="ap-props-list"></div>
+    </div>
+
+    <!-- ── TAB: MENSAJES ── -->
+    <div class="ap-view" id="ap-mensajes">
+      <div class="ap-card">
+        <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:16px;">✉️ Mensajes Enviados a Ciudadanos</div>
+        <div id="ap-msg-history">
+          <div style="text-align:center;padding:40px;color:#6B8AAA;">
+            <div style="font-size:36px;margin-bottom:10px;">📭</div>
+            <p>Aún sin mensajes. Ve a <strong>Reportes</strong> y toca ✉️ en cualquier reporte.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /max-width -->
+</div><!-- /#admin-panel -->
+
+<!-- ══ MSG MODAL (dentro del admin) ══ -->
+<div id="ap-msg-modal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#152236;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;width:100%;max-width:460px;">
+    <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;">✉️ Mensaje al Ciudadano</div>
+    <div id="ap-msg-folio" style="font-size:12px;color:#2E6DB4;margin-bottom:14px;"></div>
+    <div id="ap-msg-citizen" style="background:#0D1B2E;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#6B8AAA;line-height:1.8;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="ap-ch-btn active" onclick="apSelCh('nota',this)">📝 Nota</button>
+      <button class="ap-ch-btn" onclick="apSelCh('whatsapp',this)">📱 WhatsApp</button>
+      <button class="ap-ch-btn" onclick="apSelCh('sms',this)">💬 SMS</button>
+    </div>
+    <textarea id="ap-msg-text" rows="5"
+      style="width:100%;background:#0D1B2E;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;color:#fff;font-family:var(--font);font-size:13px;resize:none;outline:none;margin-bottom:12px;"
+      placeholder="Escribe tu mensaje..."></textarea>
+    <div style="display:flex;gap:8px;">
+      <button onclick="apSendMsg()" style="flex:1;background:#2E6DB4;color:#fff;border:none;border-radius:10px;padding:12px;font-family:var(--font);font-size:13px;font-weight:800;cursor:pointer;">📨 Enviar</button>
+      <button onclick="apCloseMsgModal()" style="background:#1C2F47;color:#6B8AAA;border:none;border-radius:10px;padding:12px 18px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;">Cancelar</button>
     </div>
   </div>
 </div>
@@ -1231,6 +1459,7 @@ nav.mobile {
 
 <!-- Supabase SDK (carga desde CDN, sin instalación) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
 'use strict';
@@ -1308,15 +1537,12 @@ function closeAdminModal() {
 async function verifyAdminPassword() {
   const input = document.getElementById('admin-pass-input').value;
   const hash  = await hashPassword(input);
+  const realHash = await hashPassword('@Aaron77');
 
-  // Comparar con hash de "@Aaron77tulancingodigital"
-  // El hash real de "@Aaron77tulancingodigital":
-  const realHash = await hashPassword('@Aaron77'); // calcula en tiempo real
-  // Para mayor seguridad: compara hashes en lugar de texto plano
   if (hash === realHash) {
     sessionStorage.setItem(ADMIN_HASH_KEY, 'authenticated');
     closeAdminModal();
-    await exportToExcel();
+    openAdminPanel();       // ← abre el panel completo
   } else {
     const err = document.getElementById('admin-error');
     err.textContent = 'Clave incorrecta. Intenta de nuevo.';
@@ -1846,6 +2072,341 @@ function renderProposals() {
       <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
     </div>`).join('');
 }
+
+
+// ════════════════════════════════════════════════════════════════
+//  PANEL ADMIN INTERNO
+// ════════════════════════════════════════════════════════════════
+let apAllReports   = [];
+let apFilter       = 'Todos';
+let apChannel      = 'nota';
+let apActiveMsgRep = null;
+let apPropTags     = [];
+let apMsgHistory   = [];
+let apCharts       = {};
+
+// Propuestas demo iniciales (las mismas de la app ciudadana)
+let apProposals = [
+  { id:1, title:'Sistema de Priorización Inteligente de Baches',  body:'Implementar un algoritmo de scoring que priorice reparaciones por densidad de tráfico, proximidad a escuelas/hospitales y antigüedad del reporte.', tags:['Infraestructura','IA','Movilidad'] },
+  { id:2, title:'Red IoT de Monitoreo de Alumbrado Público',       body:'Sensores de bajo costo en luminarias para detección automática de fallas en tiempo real.',                                                              tags:['IoT','Energía','Automatización'] },
+  { id:3, title:'Plataforma Unificada de Atención Ciudadana',      body:'Integración de WhatsApp Business API para que ciudadanos reporten sin descargar apps.',                                                                  tags:['WhatsApp API','NLP','Atención'] },
+];
+
+// ── Abrir / cerrar ───────────────────────────────────────────
+async function openAdminPanel() {
+  document.getElementById('admin-panel').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  await apLoadReports();
+  apRenderStats();
+  apRenderCharts();
+  apRenderRecentList();
+  apRenderTable();
+  apRenderProposals();
+  apStartRealtime();
+}
+
+function closeAdminPanel() {
+  document.getElementById('admin-panel').style.display = 'none';
+  document.body.style.overflow = '';
+  sessionStorage.removeItem(ADMIN_HASH_KEY);
+}
+
+// ── Carga Supabase ───────────────────────────────────────────
+async function apLoadReports() {
+  if (!sb) { apSetBadge(false); return; }
+  try {
+    const { data, error } = await sb
+      .from('reportes').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    apAllReports = data || [];
+    apSetBadge(true);
+    document.getElementById('ap-nav-badge').textContent =
+      apAllReports.filter(r => r.estado === 'Recibido').length;
+  } catch(e) { console.error(e); apSetBadge(false); }
+}
+
+function apSetBadge(ok) {
+  document.getElementById('ap-sb-badge').textContent = ok ? '🟢 Supabase conectado' : '🟡 Sin conexión';
+}
+
+async function apUpdateStatus(id, newStatus) {
+  if (!sb) return;
+  const { error } = await sb.from('reportes').update({ estado: newStatus }).eq('id', id);
+  if (error) { showToast('Error al actualizar','error'); return; }
+  apAllReports = apAllReports.map(r => r.id === id ? {...r, estado: newStatus} : r);
+  apRenderStats(); apRenderCharts(); apRenderTable();
+  showToast('✅ Estatus: ' + newStatus, 'success');
+}
+
+async function apDeleteReport(id) {
+  if (!confirm('¿Eliminar este reporte permanentemente?')) return;
+  const { error } = await sb.from('reportes').delete().eq('id', id);
+  if (error) { showToast('Error al eliminar','error'); return; }
+  apAllReports = apAllReports.filter(r => r.id !== id);
+  apRenderStats(); apRenderCharts(); apRenderTable(); apRenderRecentList();
+  showToast('🗑️ Reporte eliminado','warn');
+}
+
+function apStartRealtime() {
+  if (!sb) return;
+  sb.channel('ap-live')
+    .on('postgres_changes', { event:'*', schema:'public', table:'reportes' }, async () => {
+      await apLoadReports();
+      apRenderStats(); apRenderCharts(); apRenderTable(); apRenderRecentList();
+    }).subscribe();
+}
+
+// ── Estadísticas ─────────────────────────────────────────────
+const AP_ICONS  = { Baches:'🛣️', Agua:'💧', Alumbrado:'💡', Seguridad:'🛡️', Basura:'🗑️', Otro:'📋' };
+const AP_TIPOS  = ['Baches','Agua','Alumbrado','Seguridad','Basura','Otro'];
+
+function apRenderStats() {
+  const r = apAllReports;
+  document.getElementById('ap-s-total').textContent      = r.length;
+  document.getElementById('ap-s-recibido').textContent   = r.filter(x=>x.estado==='Recibido').length;
+  document.getElementById('ap-s-gestion').textContent    = r.filter(x=>x.estado==='En Gestión').length;
+  document.getElementById('ap-s-solucionado').textContent= r.filter(x=>x.estado==='Solucionado').length;
+}
+
+function apRenderCharts() {
+  const tipos  = AP_TIPOS.map(t => apAllReports.filter(r => r.type===t).length);
+  const rec    = apAllReports.filter(r=>r.estado==='Recibido').length;
+  const ges    = apAllReports.filter(r=>r.estado==='En Gestión').length;
+  const sol    = apAllReports.filter(r=>r.estado==='Solucionado').length;
+
+  if (apCharts.tipo) apCharts.tipo.destroy();
+  apCharts.tipo = new Chart(document.getElementById('ap-chart-tipo'), {
+    type: 'bar',
+    data: { labels: AP_TIPOS.map(t=>AP_ICONS[t]+' '+t), datasets:[{ data:tipos, backgroundColor:['#2E6DB4','#16A34A','#D97706','#7D1A2E','#6B7280','#A855F7'], borderRadius:7 }] },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#6B8AAA'},grid:{color:'rgba(255,255,255,.05)'}}, y:{ticks:{color:'#6B8AAA'},grid:{color:'rgba(255,255,255,.05)'}} } }
+  });
+
+  if (apCharts.status) apCharts.status.destroy();
+  apCharts.status = new Chart(document.getElementById('ap-chart-status'), {
+    type: 'doughnut',
+    data: { labels:['Recibido','En Gestión','Solucionado'], datasets:[{ data:[rec,ges,sol], backgroundColor:['#D97706','#2E6DB4','#16A34A'], borderWidth:0, hoverOffset:8 }] },
+    options: { responsive:true, plugins:{ legend:{ labels:{ color:'#6B8AAA',font:{size:12} } } } }
+  });
+}
+
+function apRenderRecentList() {
+  const el = document.getElementById('ap-recent-list');
+  const recent = [...apAllReports].slice(0,10);
+  if (!recent.length) { el.innerHTML='<p style="color:#6B8AAA;text-align:center;padding:20px">Sin reportes aún</p>'; return; }
+  const bc = {'Recibido':'#D97706','En Gestión':'#2E6DB4','Solucionado':'#16A34A'};
+  el.innerHTML = recent.map(r => {
+    const folio = r.folio||'TUL-'+String(r.id).padStart(5,'0');
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+      <span style="font-size:22px">${AP_ICONS[r.type]||'📋'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#E2ECF6">${r.type} — ${folio}</div>
+        <div style="font-size:11px;color:#6B8AAA;margin-top:2px">${(r.descripcion||'').substring(0,55)}...</div>
+      </div>
+      <span style="background:${bc[r.estado]||'#D97706'}22;color:${bc[r.estado]||'#D97706'};padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap">${r.estado}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Tabla de reportes ────────────────────────────────────────
+function apSetFilter(f, btn) {
+  apFilter = f;
+  document.querySelectorAll('.ap-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  apRenderTable();
+}
+
+function apFilterTable() { apRenderTable(); }
+
+function apRenderTable() {
+  const search = (document.getElementById('ap-search')?.value||'').toLowerCase();
+  let data = apFilter==='Todos' ? apAllReports : apAllReports.filter(r=>r.estado===apFilter);
+  if (search) data = data.filter(r =>
+    (r.folio||'').toLowerCase().includes(search) ||
+    (r.descripcion||'').toLowerCase().includes(search) ||
+    (r.ubicacion||'').toLowerCase().includes(search) ||
+    (r.nombre||'').toLowerCase().includes(search) ||
+    (r.colonia||'').toLowerCase().includes(search)
+  );
+
+  const tbody = document.getElementById('ap-tbody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#6B8AAA">Sin resultados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(r => {
+    const folio   = r.folio||'TUL-'+String(r.id).padStart(5,'0');
+    const citizen = [r.nombre,r.colonia,r.celular].filter(Boolean).join(' · ')||'—';
+    return `<tr>
+      <td style="font-weight:800;color:#93C5FD;font-size:12px">${folio}</td>
+      <td>${AP_ICONS[r.type]||'📋'} ${r.type||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.descripcion||''}">${(r.descripcion||'').substring(0,40)}…</td>
+      <td style="color:#6B8AAA;font-size:12px">${r.ubicacion||r.colonia||'—'}</td>
+      <td style="color:#6B8AAA;font-size:12px">${citizen}</td>
+      <td style="color:#6B8AAA;font-size:12px;white-space:nowrap">${r.fecha||r.created_at?.split('T')[0]||'—'}</td>
+      <td>
+        <select class="ap-status-sel" onchange="apUpdateStatus(${r.id},this.value)">
+          <option ${r.estado==='Recibido'?'selected':''}>Recibido</option>
+          <option ${r.estado==='En Gestión'?'selected':''}>En Gestión</option>
+          <option ${r.estado==='Solucionado'?'selected':''}>Solucionado</option>
+        </select>
+      </td>
+      <td style="display:flex;gap:6px;">
+        <button class="ap-btn ap-btn-msg" onclick="apOpenMsg(${r.id})">✉️</button>
+        <button class="ap-btn ap-btn-del" onclick="apDeleteReport(${r.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Mensaje al ciudadano ──────────────────────────────────────
+function apOpenMsg(id) {
+  apActiveMsgRep = apAllReports.find(r=>r.id===id);
+  if (!apActiveMsgRep) return;
+  const folio = apActiveMsgRep.folio||'TUL-'+String(apActiveMsgRep.id).padStart(5,'0');
+  document.getElementById('ap-msg-folio').textContent = `${folio} · ${apActiveMsgRep.type}`;
+  document.getElementById('ap-msg-citizen').innerHTML = `
+    <strong style="color:#E2ECF6">Nombre:</strong> ${apActiveMsgRep.nombre||'Anónimo'}<br>
+    <strong style="color:#E2ECF6">Celular:</strong> ${apActiveMsgRep.celular||'No proporcionado'}<br>
+    <strong style="color:#E2ECF6">Colonia:</strong> ${apActiveMsgRep.colonia||'No proporcionada'}<br>
+    <strong style="color:#E2ECF6">Ubicación:</strong> ${apActiveMsgRep.ubicacion||'—'}`;
+  document.getElementById('ap-msg-text').value =
+    `Estimado ciudadano, su reporte ${folio} sobre "${apActiveMsgRep.type}" ha sido recibido. Estamos trabajando en atenderlo.
+
+Atentamente,
+Aarón Jiménez · Imagina Tulancingo`;
+  const modal = document.getElementById('ap-msg-modal');
+  modal.style.display = 'flex';
+}
+
+function apCloseMsgModal() {
+  document.getElementById('ap-msg-modal').style.display = 'none';
+  apActiveMsgRep = null;
+}
+
+function apSelCh(ch, btn) {
+  apChannel = ch;
+  document.querySelectorAll('.ap-ch-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function apSendMsg() {
+  if (!apActiveMsgRep) return;
+  const text = document.getElementById('ap-msg-text').value.trim();
+  if (!text) { showToast('Escribe un mensaje','warn'); return; }
+  const folio = apActiveMsgRep.folio||'TUL-'+String(apActiveMsgRep.id).padStart(5,'0');
+  const cel   = apActiveMsgRep.celular||'';
+
+  if (apChannel==='whatsapp' && cel) {
+    window.open(`https://wa.me/52${cel.replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank');
+  } else if (apChannel==='sms' && cel) {
+    window.open(`sms:${cel}?body=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  apMsgHistory.push({ folio, canal:apChannel, ciudadano:apActiveMsgRep.nombre||'Anónimo', cel, texto:text, fecha:new Date().toLocaleDateString('es-MX') });
+  apRenderMsgHistory();
+  apCloseMsgModal();
+  showToast('✅ Mensaje enviado', 'success');
+}
+
+function apRenderMsgHistory() {
+  const el = document.getElementById('ap-msg-history');
+  if (!apMsgHistory.length) { el.innerHTML='<div style="text-align:center;padding:30px;color:#6B8AAA"><div style="font-size:36px">📭</div><p>Sin mensajes aún</p></div>'; return; }
+  el.innerHTML = [...apMsgHistory].reverse().map(m=>`
+    <div style="border-bottom:1px solid rgba(255,255,255,.06);padding:14px 0;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-weight:800;color:#93C5FD">${m.folio}</span>
+        <span style="font-size:11px;color:#6B8AAA">${m.fecha} · ${m.canal}</span>
+      </div>
+      <div style="font-size:12px;color:#6B8AAA;margin-bottom:6px">Para: ${m.ciudadano} ${m.cel?'('+m.cel+')':''}</div>
+      <div style="font-size:13px;color:#E2ECF6;background:#0D1B2E;padding:10px 12px;border-radius:8px">${m.texto}</div>
+    </div>`).join('');
+}
+
+// ── Propuestas ────────────────────────────────────────────────
+function apAddTag() {
+  const input = document.getElementById('ap-tag-in');
+  const val = input.value.trim();
+  if (!val || apPropTags.includes(val)) { input.value=''; return; }
+  apPropTags.push(val); input.value='';
+  apRenderTagsPreview();
+}
+
+function apRemoveTag(i) { apPropTags.splice(i,1); apRenderTagsPreview(); }
+
+function apRenderTagsPreview() {
+  document.getElementById('ap-tags-preview').innerHTML = apPropTags.map((t,i)=>
+    `<span style="background:rgba(46,109,180,.2);color:#93C5FD;border-radius:99px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px">${t}<button onclick="apRemoveTag(${i})" style="background:none;border:none;color:#93C5FD;cursor:pointer;font-size:13px">×</button></span>`
+  ).join('');
+}
+
+function apSaveProposal() {
+  const title = document.getElementById('ap-prop-title').value.trim();
+  const body  = document.getElementById('ap-prop-body').value.trim();
+  if (!title||!body) { showToast('Completa título y descripción','warn'); return; }
+  apProposals.unshift({ id:Date.now(), title, body, tags:[...apPropTags] });
+  document.getElementById('ap-prop-title').value='';
+  document.getElementById('ap-prop-body').value='';
+  apPropTags=[]; apRenderTagsPreview();
+  apRenderProposals();
+  // Also update citizen-facing proposals
+  PROPOSALS.unshift({ title, date: new Date().toLocaleDateString('es-MX',{month:'long',year:'numeric'}), body, tags:[...apProposals[0].tags] });
+  renderProposals();
+  showToast('✅ Propuesta publicada en la app ciudadana','success');
+}
+
+function apDeleteProposal(id) {
+  if (!confirm('¿Eliminar esta propuesta?')) return;
+  apProposals = apProposals.filter(p=>p.id!==id);
+  apRenderProposals();
+  showToast('🗑️ Propuesta eliminada','warn');
+}
+
+function apRenderProposals() {
+  const el = document.getElementById('ap-props-list');
+  if (!apProposals.length) { el.innerHTML='<p style="color:#6B8AAA;text-align:center;padding:20px">Sin propuestas</p>'; return; }
+  el.innerHTML = apProposals.map(p=>`
+    <div style="background:#1C2F47;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start;">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:5px">${p.title}</div>
+        <div style="font-size:12px;color:#6B8AAA;line-height:1.6">${p.body.substring(0,100)}…</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${(p.tags||[]).map(t=>`<span style="background:rgba(46,109,180,.2);color:#93C5FD;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700">${t}</span>`).join('')}</div>
+      </div>
+      <button class="ap-btn ap-btn-del" onclick="apDeleteProposal(${p.id})">🗑️</button>
+    </div>`).join('');
+}
+
+// ── Navegación del panel ─────────────────────────────────────
+function apShowTab(tabId, btn) {
+  document.querySelectorAll('.ap-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  document.querySelectorAll('.ap-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Excel desde el admin ──────────────────────────────────────
+function ap_exportExcel() {
+  const headers = ['Folio','Tipo','Descripción','Ubicación','Nombre','Celular','Colonia','Fecha','Estado'];
+  const rows = apAllReports.map(r=>[
+    r.folio||'TUL-'+String(r.id).padStart(5,'0'),
+    r.type||'', r.descripcion||'', r.ubicacion||'',
+    r.nombre||'', r.celular||'', r.colonia||'',
+    r.fecha||r.created_at?.split('T')[0]||'', r.estado||''
+  ]);
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const xmlRows = [headers,...rows].map(row=>`<Row>${row.map(c=>`<Cell><Data ss:Type="String">${esc(c)}</Data></Cell>`).join('')}</Row>`).join('\n');
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Reportes"><Table>${xmlRows}</Table></Worksheet></Workbook>`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8;'}));
+  a.download = `Admin_Tulancingo_${new Date().toISOString().split('T')[0]}.xls`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  showToast('📥 Excel descargado','success');
+}
+
+// Close msg modal on background click
+document.getElementById('ap-msg-modal').addEventListener('click', function(e) {
+  if (e.target===this) apCloseMsgModal();
+});
+
 
 // ── Inicialización ──────────────────────────────────────────
 checkPrivacy();
