@@ -483,6 +483,47 @@ textarea.ap-input{resize:none;}
     <div id="proposals-list"></div>
   </div>
 
+  <!-- TAB: MI ZONA -->
+  <div id="tab-ubicacion" class="tab-content">
+    <div style="background:linear-gradient(135deg,var(--primary),#1a3a6e);border-radius:20px;padding:22px;margin-bottom:14px;text-align:center;">
+      <div style="font-size:44px;margin-bottom:10px;">📍</div>
+      <div style="font-family:'Montserrat';font-size:18px;font-weight:900;color:#fff;margin-bottom:6px;">Mi Ubicación</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);">Detecta tu zona para reportar más rápido</div>
+    </div>
+
+    <div class="card" id="location-card">
+      <div class="h-title" style="font-size:15px;">📡 Detectando tu ubicación...</div>
+      <div id="loc-status" style="text-align:center;padding:20px;">
+        <div style="font-size:36px;margin-bottom:10px;">⏳</div>
+        <p style="font-size:13px;color:#888;">Toca el botón para activar</p>
+      </div>
+
+      <button class="btn btn-main" id="btn-detect-loc" onclick="detectLocation()" style="margin-bottom:12px;">
+        📍 DETECTAR MI UBICACIÓN AHORA
+      </button>
+
+      <div id="loc-result" style="display:none;">
+        <div style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:12px;padding:14px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:800;color:#065F46;margin-bottom:8px;">✅ UBICACIÓN DETECTADA</div>
+          <div id="loc-address" style="font-size:13px;color:#166534;font-weight:600;margin-bottom:4px;">—</div>
+          <div id="loc-coords" style="font-size:10px;color:#6B8AAA;"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <button class="btn" style="background:#EBF2FF;color:var(--primary);font-size:12px;padding:12px;"
+                  onclick="openMyLocationInMaps()">🗺️ Ver en Maps</button>
+          <button class="btn btn-green" style="font-size:12px;padding:12px;"
+                  onclick="useLocationForReport()">📝 Usar para Reporte</button>
+        </div>
+
+        <div class="card" style="background:#FFF7ED;border:1px solid #FED7AA;padding:14px;margin:0;">
+          <div style="font-size:11px;font-weight:800;color:#92400E;margin-bottom:8px;">🏘️ REPORTES EN TU ZONA</div>
+          <div id="nearby-reports" style="font-size:12px;color:#666;">Buscando reportes cercanos...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB: SÚMATE -->
   <div id="tab-sumate" class="tab-content">
     <div class="card">
@@ -506,8 +547,8 @@ textarea.ap-input{resize:none;}
     <span style="margin-top:36px;">REPORTAR</span>
   </div>
   <div class="nav-item" onclick="switchTab('sumate',this)"><span class="icon">🤝</span>SÚMATE</div>
-  <div class="nav-item" onclick="window.open('https://maps.google.com/?q=Tulancingo+de+Bravo+Hidalgo','_blank')">
-    <span class="icon">📍</span>MAPA
+  <div class="nav-item" onclick="switchTab('ubicacion',this)" id="nav-ubicacion">
+    <span class="icon">📍</span>MI ZONA
   </div>
 </nav>
 
@@ -804,10 +845,30 @@ function selType(t, btn) {
 
 function getGPS() {
   const btn = document.getElementById('gps-btn');
+  // If already detected via Mi Zona tab, use it instantly
+  if (myCoords?.address) {
+    document.getElementById('f-location').value = myCoords.address;
+    btn.textContent = '📍 GPS'; btn.disabled = false;
+    showToast('📍 Ubicación cargada', 'success');
+    return;
+  }
   btn.textContent='⏳ ...'; btn.disabled=true;
   navigator.geolocation?.getCurrentPosition(
-    p=>{document.getElementById('f-location').value=`${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`;btn.textContent='📍 GPS';btn.disabled=false;},
-    ()=>{document.getElementById('f-location').value='Tulancingo de Bravo, Hgo.';btn.textContent='📍 GPS';btn.disabled=false;}
+    async (p) => {
+      myCoords = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) };
+      let address = `${myCoords.lat.toFixed(5)}, ${myCoords.lng.toFixed(5)}`;
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${myCoords.lat}&lon=${myCoords.lng}&format=json&accept-language=es`);
+        const d = await r.json(); const pr = d.address;
+        address = [pr.road||pr.pedestrian, pr.suburb||pr.neighbourhood, pr.city||pr.town||pr.village].filter(Boolean).join(', ') || address;
+      } catch(e) {}
+      myCoords.address = address;
+      document.getElementById('f-location').value = address;
+      btn.textContent='📍 GPS'; btn.disabled=false;
+      showToast('📍 Ubicación detectada', 'success');
+    },
+    ()=>{ document.getElementById('f-location').value='Tulancingo de Bravo, Hgo.'; btn.textContent='📍 GPS'; btn.disabled=false; },
+    { enableHighAccuracy:true, timeout:10000 }
   );
 }
 
@@ -1333,6 +1394,136 @@ document.addEventListener('click', function(e) {
   if (target) playClick();
 }, true);
 
+
+// ════ UBICACIÓN INTELIGENTE ════════════════════════════════════
+let myCoords = null;
+
+async function detectLocation() {
+  const btn    = document.getElementById('btn-detect-loc');
+  const status = document.getElementById('loc-status');
+  const result = document.getElementById('loc-result');
+
+  btn.textContent = '⏳ Detectando...'; btn.disabled = true;
+  status.innerHTML = '<div style="font-size:36px;margin-bottom:10px;">⏳</div><p style="font-size:13px;color:#888;">Obteniendo tu posición GPS...</p>';
+
+  if (!navigator.geolocation) {
+    status.innerHTML = '<div style="font-size:36px;margin-bottom:10px;">❌</div><p style="font-size:13px;color:#999;">Tu navegador no soporta geolocalización</p>';
+    btn.textContent = '📍 DETECTAR MI UBICACIÓN'; btn.disabled = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      myCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy) };
+
+      // Reverse geocode with OpenStreetMap (free, no API key)
+      let address = `${myCoords.lat.toFixed(5)}, ${myCoords.lng.toFixed(5)}`;
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${myCoords.lat}&lon=${myCoords.lng}&format=json&accept-language=es`);
+        const d = await r.json();
+        const p = d.address;
+        // Build human readable address
+        const parts = [
+          p.road || p.pedestrian || p.footway,
+          p.suburb || p.neighbourhood || p.quarter,
+          p.city || p.town || p.village || p.county,
+          p.state
+        ].filter(Boolean);
+        address = parts.join(', ') || address;
+      } catch(e) { /* use coords if geocoding fails */ }
+
+      document.getElementById('loc-address').textContent = address;
+      document.getElementById('loc-coords').textContent  = `📡 GPS: ${myCoords.lat.toFixed(5)}, ${myCoords.lng.toFixed(5)} · Precisión: ±${myCoords.acc}m`;
+
+      status.style.display = 'none';
+      result.style.display = 'block';
+      btn.textContent = '🔄 Actualizar ubicación'; btn.disabled = false;
+
+      // Store for auto-fill
+      myCoords.address = address;
+
+      // Find nearby reports
+      renderNearbyReports(myCoords.lat, myCoords.lng);
+      showToast('📍 Ubicación detectada', 'success');
+    },
+    (err) => {
+      const msgs = {1:'Permiso denegado. Activa la ubicación en tu navegador.', 2:'No se pudo obtener la ubicación. Verifica tu GPS.', 3:'Tiempo agotado. Intenta de nuevo.'};
+      status.innerHTML = `<div style="font-size:36px;margin-bottom:10px;">⚠️</div><p style="font-size:13px;color:#888;">${msgs[err.code]||'Error desconocido'}</p>`;
+      btn.textContent = '📍 INTENTAR DE NUEVO'; btn.disabled = false;
+      showToast('No se pudo detectar la ubicación', 'warn');
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+  );
+}
+
+function openMyLocationInMaps() {
+  if (!myCoords) return;
+  window.open(`https://maps.google.com/?q=${myCoords.lat},${myCoords.lng}`, '_blank');
+}
+
+function useLocationForReport() {
+  if (!myCoords) return;
+  // Switch to report tab and pre-fill location
+  const navReportar = document.querySelector('.nav-item.active');
+  switchTab('reportar', document.querySelectorAll('.nav-item')[2]);
+  // Pre-fill the location field
+  const locField = document.getElementById('f-location');
+  if (locField) {
+    locField.value = myCoords.address || `${myCoords.lat.toFixed(5)}, ${myCoords.lng.toFixed(5)}`;
+  }
+  showToast('📍 Ubicación copiada al reporte', 'success');
+  playSuccess();
+}
+
+function renderNearbyReports(lat, lng) {
+  const el = document.getElementById('nearby-reports');
+  if (!allReports.length) { el.textContent = 'Sin reportes registrados aún en la plataforma.'; return; }
+
+  // Calculate distance (simple Haversine approx)
+  function dist(lat2, lng2) {
+    if (!lat2 || !lng2) return 99999;
+    const R = 6371000;
+    const dLat = (lat2 - lat) * Math.PI / 180;
+    const dLng = (lng2 - lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  // Parse coords from ubicacion field if it looks like lat,lng
+  const withCoords = allReports.map(r => {
+    const m = (r.ubicacion||'').match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+    return m ? {...r, _dist: dist(parseFloat(m[1]), parseFloat(m[2]))} : {...r, _dist: 99999};
+  }).filter(r => r._dist < 5000).sort((a,b) => a._dist - b._dist).slice(0,4);
+
+  if (!withCoords.length) {
+    // No GPS coords stored — show reports from same colonia/city
+    const sameZone = allReports.filter(r => r.colonia || r.ubicacion).slice(0,3);
+    if (!sameZone.length) { el.textContent = 'No hay reportes cercanos aún.'; return; }
+    const ICONS = {Baches:'🛣️',Agua:'💧',Alumbrado:'💡',Seguridad:'🛡️',Basura:'🗑️',Otro:'📋'};
+    el.innerHTML = sameZone.map(r =>
+      `<div style="padding:8px 0;border-bottom:1px solid #FDDCB0;font-size:12px;">
+        ${ICONS[r.type]||'📋'} <strong>${r.type}</strong> — ${r.colonia||r.ubicacion||'—'}
+        <span style="float:right;font-size:10px;color:#D97706;font-weight:700">${r.estado}</span>
+      </div>`).join('') + '<div style="font-size:10px;color:#999;margin-top:8px;">Reportes recientes en la plataforma</div>';
+    return;
+  }
+
+  const ICONS = {Baches:'🛣️',Agua:'💧',Alumbrado:'💡',Seguridad:'🛡️',Basura:'🗑️',Otro:'📋'};
+  el.innerHTML = withCoords.map(r =>
+    `<div style="padding:8px 0;border-bottom:1px solid #FDDCB0;font-size:12px;">
+      ${ICONS[r.type]||'📋'} <strong>${r.type}</strong> — ${r.ubicacion||'—'}
+      <span style="float:right;font-size:10px;color:#D97706;font-weight:700">${Math.round(r._dist)}m</span>
+    </div>`).join('');
+}
+
+// Auto-detect when switching to ubicacion tab
+const _origSwitchTab = switchTab;
+function switchTab(id, el) {
+  _origSwitchTab(id, el);
+  if (id === 'ubicacion' && !myCoords) {
+    setTimeout(detectLocation, 400);
+  }
+}
 // ════ INIT ═══════════════════════════════════════════════════════
 (async()=>{
   renderProposals();
