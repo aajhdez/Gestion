@@ -705,6 +705,7 @@ try { sb = supabase.createClient(SB_URL, SB_ANON); } catch(e) {}
 
 // ════ ESTADO ═══════════════════════════════════════════════════
 let allReports   = [];
+let myCoords     = null;
 let dashFilter   = 'Todos';
 let apFilter     = 'Todos';
 let apChannel    = 'nota';
@@ -1323,6 +1324,7 @@ function switchTab(id, el) {
   document.getElementById('tab-'+id).classList.add('active');
   el.classList.add('active');
   if(id==='dashboard') renderDash();
+  if(id==='ubicacion' && !myCoords) setTimeout(detectLocation, 400);
 }
 
 // ════ TOAST ══════════════════════════════════════════════════════
@@ -1396,8 +1398,6 @@ document.addEventListener('click', function(e) {
 
 
 // ════ UBICACIÓN INTELIGENTE ════════════════════════════════════
-let myCoords = null;
-
 async function detectLocation() {
   const btn    = document.getElementById('btn-detect-loc');
   const status = document.getElementById('loc-status');
@@ -1516,14 +1516,7 @@ function renderNearbyReports(lat, lng) {
     </div>`).join('');
 }
 
-// Auto-detect when switching to ubicacion tab
-const _origSwitchTab = switchTab;
-function switchTab(id, el) {
-  _origSwitchTab(id, el);
-  if (id === 'ubicacion' && !myCoords) {
-    setTimeout(detectLocation, 400);
-  }
-}
+// Auto-detect integrado en switchTab principal
 // ════ INIT ═══════════════════════════════════════════════════════
 (async()=>{
   renderProposals();
